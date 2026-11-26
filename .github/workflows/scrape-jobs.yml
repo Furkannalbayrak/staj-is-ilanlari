@@ -1,0 +1,49 @@
+name: Scrape Turkey Jobs & Internships
+
+on:
+  schedule:
+    # Her 2 saatte bir otomatik çalışır (ücretsiz GitHub Actions limiti içinde)
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Opsiyonel: Sadece belirli bir kaynak slug'ı (boş bırakılırsa tümü)"
+        required: false
+        default: ""
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install scraper dependencies
+        working-directory: workers/scraper
+        run: uv sync
+
+      - name: Run scraper worker
+        working-directory: workers/scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+        run: |
+          if [ -n "${{ github.event.inputs.source }}" ]; then
+            uv run scrape --source "${{ github.event.inputs.source }}"
+          else
+            uv run scrape
+          fi
