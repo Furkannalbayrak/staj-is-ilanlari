@@ -14,6 +14,7 @@ from scraper.adapters.base import BaseAdapter
 from scraper.adapters.custom.baykar import BaykarAdapter
 from scraper.adapters.portals.jobspy_portal import JobSpyPortalAdapter
 from scraper.adapters.portals.linkedin import LinkedInGuestAdapter
+from scraper.adapters.portals.youthall import YouthallAdapter
 from scraper.db import Database
 from scraper.models import ScrapeResult, SourceConfig
 from scraper.notifier import notify_for_new_jobs
@@ -29,6 +30,7 @@ ADAPTER_REGISTRY: dict[str, type[BaseAdapter]] = {
     "ats.greenhouse": GreenhouseAdapter,
     "custom.baykar": BaykarAdapter,
     "portals.linkedin": LinkedInGuestAdapter,
+    "portals.youthall": YouthallAdapter,
     "portals.jobspy_portal": JobSpyPortalAdapter,
 }
 

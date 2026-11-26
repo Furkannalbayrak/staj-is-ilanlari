@@ -16,9 +16,9 @@ AtsType = Literal[
     "custom",
     "portal",
 ]
-SourcePlatform = Literal["direct", "linkedin", "indeed", "kariyernet"]
+SourcePlatform = Literal["direct", "linkedin", "indeed", "kariyernet", "youthall"]
 WorkMode = Literal["onsite", "hybrid", "remote", "unknown"]
-EmploymentType = Literal["full_time", "part_time", "internship", "new_grad", "contract"]
+EmploymentType = Literal["full_time", "part_time", "internship", "new_grad", "contract", "unknown"]
 JobCategory = Literal[
     "software",
     "data_ai",
@@ -61,7 +61,8 @@ class JobPayload(BaseModel):
     location: str | None = None
     city: str | None = None
     work_mode: WorkMode = "unknown"
-    employment_type: EmploymentType = "full_time"
+    employment_type: EmploymentType = "unknown"
+    work_schedule: str | None = None
     category: JobCategory = "other"
     department: str | None = None
     posted_at: datetime | None = None

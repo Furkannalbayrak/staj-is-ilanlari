@@ -43,7 +43,7 @@ sources:
     config:
       base_url: https://kariyer.baykartech.com
 
-  # 3) BÜYÜK İŞ PORTALI (LinkedIn Doğrudan Guest API - Logo + Gerçek Saat + Tüm Sektörler)
+  # 3) BÜYÜK İŞ PORTALI (LinkedIn Doğrudan Guest API - Logo + Gerçek Saat + Çalışma Modeli)
   - slug: linkedin-tr
     name: LinkedIn
     enabled: true
@@ -57,10 +57,28 @@ sources:
       location: Turkey
       turkey_only: true
       hours_old: 24
-      max_jobs_per_term: 250
       delay_min_sec: 2.0
       delay_max_sec: 3.8
       max_429_retries: 2
-      search_terms:
-        - ""
-        - "staj"
+      queries:
+        - label: tum-sektorler
+          keywords: ""
+          max_jobs: 250
+        - label: staj
+          keywords: "staj"
+          max_jobs: 120
+
+  # 4) YOUTHALL (Türkiye Staj, Yeni Mezun ve İş İlanları - Logolu & Hızlı)
+  - slug: youthall
+    name: Youthall
+    enabled: true
+    source_type: portal
+    ats_type: portal
+    adapter: portals.youthall
+    careers_url: https://www.youthall.com/tr/is-ilanlari/
+    full_sync: false
+    config:
+      site_name: youthall
+      max_pages: 10
+      delay_min_sec: 1.0
+      delay_max_sec: 2.0
