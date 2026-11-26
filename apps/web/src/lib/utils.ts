@@ -44,13 +44,14 @@ function isUtcMidnight(date: Date): boolean {
 /**
  * İlan tarihini dürüstçe biçimlendirir:
  * - Kaynak gerçek saat bilgisi verdiyse ("2 sa önce") gösterir.
- * - Kaynak sadece takvim günü verdiyse (saat = 00:00 UTC, ör. LinkedIn) asla uydurma saat
- *   göstermez; bunun yerine "Bugün", "Dün" veya "24 Kas" yazar.
- * - Kaynak hiç tarih vermediyse "Sisteme eklenme: X dk önce" bilgisini gösterir.
+ * - Kaynak sadece takvim günü verdiyse (saat = 00:00 UTC) asla uydurma saat
+ *   göstermez; "Bugün", "Dün", "4 gün önce" veya "9 Kas" yazar.
+ * - Kaynak hiç yayın tarihi vermediyse asla DB kayıt zamanını ("1 dk önce")
+ *   yayın tarihi gibi göstermez; "Aktif" yazar.
  */
 export function formatJobDateTr(
   postedAt: string | null | undefined,
-  firstSeenAt: string
+  _firstSeenAt?: string
 ): { label: string; isExactTime: boolean } {
   if (postedAt) {
     const d = new Date(postedAt);
@@ -73,7 +74,7 @@ export function formatJobDateTr(
     }
   }
 
-  return { label: formatRelativeTimeTr(firstSeenAt), isExactTime: false };
+  return { label: "Aktif", isExactTime: false };
 }
 
 export function hasSupabaseEnv(): boolean {

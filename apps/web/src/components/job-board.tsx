@@ -47,6 +47,7 @@ export function JobBoard({
   userId,
   emptyReason,
 }: JobBoardProps) {
+  const [jobs, setJobs] = useState<Job[]>(initialJobs);
   const [search, setSearch] = useState("");
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [selectedEmployment, setSelectedEmployment] = useState<EmploymentType | "all">("all");
@@ -60,17 +61,17 @@ export function JobBoard({
 
   const availableCities = useMemo(() => {
     const set = new Set<string>();
-    for (const j of initialJobs) {
+    for (const j of jobs) {
       if (j.city) set.add(j.city);
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b, "tr"));
-  }, [initialJobs]);
+  }, [jobs]);
 
   const filteredJobs = useMemo(() => {
     const expanded = expandQueryTerms(search);
     const matched: { job: Job; score: number }[] = [];
 
-    for (const job of initialJobs) {
+    for (const job of jobs) {
       if (selectedCity !== "all" && job.city !== selectedCity) continue;
       if (selectedEmployment !== "all" && job.employment_type !== selectedEmployment) continue;
       if (selectedWorkMode !== "all" && job.work_mode !== selectedWorkMode) continue;
@@ -96,7 +97,7 @@ export function JobBoard({
 
     return matched.map((m) => m.job);
   }, [
-    initialJobs,
+    jobs,
     search,
     selectedCity,
     selectedEmployment,
@@ -495,16 +496,32 @@ export function JobBoard({
                               <MapPin className="h-3 w-3" />
                               {job.city || job.location || "Türkiye"}
                             </span>
-                            <span>·</span>
-                            <span>{EMPLOYMENT_TYPE_LABELS[job.employment_type]}</span>
+                            {job.employment_type !== "unknown" && (
+                              <>
+                                <span>·</span>
+                                <span>{EMPLOYMENT_TYPE_LABELS[job.employment_type]}</span>
+                              </>
+                            )}
+                            {job.work_schedule &&
+                              job.work_schedule !==
+                                EMPLOYMENT_TYPE_LABELS[job.employment_type] && (
+                                <>
+                                  <span>·</span>
+                                  <span>{job.work_schedule}</span>
+                                </>
+                              )}
                             {job.work_mode !== "unknown" && (
                               <>
                                 <span>·</span>
                                 <span>{WORK_MODE_LABELS[job.work_mode]}</span>
                               </>
                             )}
-                            <span>·</span>
-                            <span>{CATEGORY_LABELS[job.category]}</span>
+                            {job.category !== "other" && (
+                              <>
+                                <span>·</span>
+                                <span>{CATEGORY_LABELS[job.category]}</span>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>

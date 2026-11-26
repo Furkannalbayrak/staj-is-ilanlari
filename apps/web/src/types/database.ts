@@ -1,11 +1,12 @@
-export type SourcePlatform = "direct" | "linkedin" | "indeed" | "kariyernet";
+export type SourcePlatform = "direct" | "linkedin" | "indeed" | "kariyernet" | "youthall";
 export type WorkMode = "onsite" | "hybrid" | "remote" | "unknown";
 export type EmploymentType =
   | "full_time"
   | "part_time"
   | "internship"
   | "new_grad"
-  | "contract";
+  | "contract"
+  | "unknown";
 export type JobCategory =
   | "software"
   | "data_ai"
@@ -47,6 +48,7 @@ export interface Job {
   city: string | null;
   work_mode: WorkMode;
   employment_type: EmploymentType;
+  work_schedule: string | null;
   category: JobCategory;
   department: string | null;
   is_active: boolean;
@@ -79,6 +81,7 @@ export const EMPLOYMENT_TYPE_LABELS: Record<EmploymentType, string> = {
   full_time: "Tam Zamanlı",
   part_time: "Yarı Zamanlı",
   contract: "Sözleşmeli",
+  unknown: "",
 };
 
 export const WORK_MODE_LABELS: Record<WorkMode, string> = {
@@ -109,4 +112,5 @@ export const SOURCE_PLATFORM_LABELS: Record<SourcePlatform, string> = {
   linkedin: "LinkedIn",
   indeed: "Indeed",
   kariyernet: "Kariyer.net",
+  youthall: "Youthall",
 };

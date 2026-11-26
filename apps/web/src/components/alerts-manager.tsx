@@ -153,13 +153,13 @@ export function AlertsManager({ initialAlerts, userId, userEmail }: AlertsManage
               className="h-9 w-full rounded-md border border-zinc-200 bg-white px-2 text-sm dark:border-zinc-800 dark:bg-zinc-900"
             >
               <option value="">Fark etmez</option>
-              {(Object.entries(EMPLOYMENT_TYPE_LABELS) as [EmploymentType, string][]).map(
-                ([k, v]) => (
+              {(Object.entries(EMPLOYMENT_TYPE_LABELS) as [EmploymentType, string][])
+                .filter(([k]) => k !== "unknown")
+                .map(([k, v]) => (
                   <option key={k} value={k}>
                     {v}
                   </option>
-                )
-              )}
+                ))}
             </select>
           </div>
 
