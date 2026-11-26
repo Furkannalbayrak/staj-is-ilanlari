@@ -2,8 +2,8 @@ name: Scrape Turkey Jobs & Internships
 
 on:
   schedule:
-    # Her 2 saatte bir otomatik çalışır (ücretsiz GitHub Actions limiti içinde)
-    - cron: "0 */2 * * *"
+    # Her 2 saatte bir :17 geçe çalışır (saat başı GitHub Actions kuyruğuna takılmaz)
+    - cron: "17 */2 * * *"
   workflow_dispatch:
     inputs:
       source:
