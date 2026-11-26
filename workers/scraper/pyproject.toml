@@ -1,0 +1,25 @@
+[project]
+name = "staj-is-scraper"
+version = "0.1.0"
+description = "Türkiye iş ve staj ilanı veri toplama ve bildirim worker'ı"
+requires-python = ">=3.11"
+dependencies = [
+  "httpx>=0.27.0",
+  "curl-cffi>=0.7.0",
+  "pydantic>=2.9.0",
+  "pyyaml>=6.0.2",
+  "selectolax>=0.3.26",
+  "supabase>=2.9.0",
+  "python-dotenv>=1.0.1",
+  "python-jobspy>=1.1.75",
+]
+
+[project.scripts]
+scrape = "scraper.main:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/scraper"]

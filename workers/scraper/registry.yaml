@@ -1,0 +1,66 @@
+# =============================================================================
+# Veri Kaynakları Kayıt Defteri (Registry)
+# Yeni bir ATS şirketi eklemek için sadece buraya birkaç satır eklemek yeterlidir.
+# =============================================================================
+
+sources:
+  # 1) ORTAK ATS KAYNAĞI (Lever JSON API)
+  # Örnek: Insider (Türkiye merkezli global teknoloji şirketi)
+  - slug: insider
+    name: Insider
+    enabled: false
+    source_type: corporate
+    ats_type: lever
+    adapter: ats.lever
+    careers_url: https://jobs.lever.co/useinsider
+    full_sync: true
+    config:
+      board_token: useinsider
+      turkey_only: true
+
+  # Örnek Greenhouse şirketi (istenildiğinde enabled: true yapılabilir)
+  - slug: sample-greenhouse
+    name: Örnek Greenhouse Şirketi
+    enabled: false
+    source_type: corporate
+    ats_type: greenhouse
+    adapter: ats.greenhouse
+    careers_url: https://boards.greenhouse.io/example
+    full_sync: true
+    config:
+      board_token: example
+      turkey_only: true
+
+  # 2) ÖZEL KURUMSAL KARİYER SAYFASI (İzole Custom Adapter)
+  - slug: baykar
+    name: Baykar Teknoloji
+    enabled: false
+    source_type: corporate
+    ats_type: custom
+    adapter: custom.baykar
+    careers_url: https://kariyer.baykartech.com
+    full_sync: true
+    config:
+      base_url: https://kariyer.baykartech.com
+
+  # 3) BÜYÜK İŞ PORTALI (LinkedIn Doğrudan Guest API - Logo + Gerçek Saat + Tüm Sektörler)
+  - slug: linkedin-tr
+    name: LinkedIn
+    enabled: true
+    source_type: portal
+    ats_type: portal
+    adapter: portals.linkedin
+    careers_url: https://www.linkedin.com/jobs
+    full_sync: false
+    config:
+      site_name: linkedin
+      location: Turkey
+      turkey_only: true
+      hours_old: 24
+      max_jobs_per_term: 250
+      delay_min_sec: 2.0
+      delay_max_sec: 3.8
+      max_429_retries: 2
+      search_terms:
+        - ""
+        - "staj"
