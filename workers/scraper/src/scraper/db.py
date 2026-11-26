@@ -124,6 +124,7 @@ class Database:
                 "city": job.city,
                 "work_mode": job.work_mode,
                 "employment_type": job.employment_type,
+                "work_schedule": job.work_schedule,
                 "category": job.category,
                 "department": job.department,
                 "is_active": True,
@@ -133,9 +134,16 @@ class Database:
             }
 
             # 1) Aynı kaynak + aynı external_id zaten varsa güncelle
+            # Mevcut dolu description/work_schedule veya bilinen employment_type/work_mode'u asla boş/unknown ile ezme
             ext_match = existing_by_ext.get((job.source_platform, job.external_id))
             if ext_match:
-                update_fields = {k: v for k, v in row_payload.items() if k not in ("dedupe_hash",)}
+                update_fields = {
+                    k: v
+                    for k, v in row_payload.items()
+                    if k not in ("dedupe_hash",)
+                    and not (k in ("description", "work_schedule", "company_logo_url", "posted_at") and v is None)
+                    and not (k in ("employment_type", "work_mode") and v == "unknown")
+                }
                 self.client.table("jobs").update(update_fields).eq("id", ext_match["id"]).execute()
                 updated_count += 1
                 continue

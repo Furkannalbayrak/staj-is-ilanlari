@@ -154,6 +154,7 @@ def detect_work_mode(*texts: str | None) -> WorkMode:
 
 
 def detect_employment_type(*texts: str | None) -> EmploymentType:
+    """Yalnızca kaynakta açıkça belirtiliyorsa tür döner; asla varsayılan tahmin yapmaz."""
     combined = " ".join(fold_tr(t) for t in texts if t)
     if any(k in combined for k in ("staj", "stajyer", "intern", "internship", "aday muhendis", "long term")):
         return "internship"
@@ -163,7 +164,9 @@ def detect_employment_type(*texts: str | None) -> EmploymentType:
         return "part_time"
     if any(k in combined for k in ("sozlesmeli", "contract", "freelance", "proje bazli")):
         return "contract"
-    return "full_time"
+    if any(k in combined for k in ("full time", "tam zamanli")):
+        return "full_time"
+    return "unknown"
 
 
 _CATEGORY_RULES: list[tuple[JobCategory, Iterable[str]]] = [
@@ -294,11 +297,51 @@ def compute_dedupe_hash(company_name: str, title: str, city: str | None) -> str:
 
 
 def strip_html(html: str | None) -> str | None:
+    """
+    HTML içeriğini hafif Markdown'a çevirir:
+    - Önce <br>, <p>, <div>, <li>, <h1-h4> blok sınırlarını satır sonuna çevirir
+      (böylece <strong> içindeki <br>/<p> etiketleri asla yutulmaz).
+    - <strong>/<b> içindeki her satırı ayrı ayrı **koyu** yapar.
+    """
     if not html:
         return None
-    from selectolax.lexbor import LexborHTMLParser
+    import html as html_lib
 
-    tree = LexborHTMLParser(html)
-    text = tree.text(separator="\n", strip=True)
+    text = re.sub(r"<(script|style)[^>]*>[\s\S]*?</\1>", "", html, flags=re.IGNORECASE)
+    # 1) Blok ve satır sonlarını ÖNCE dönüştür
+    text = re.sub(r"<br\s*/?>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"<li[^>]*>", "\n- ", text, flags=re.IGNORECASE)
+    text = re.sub(r"</li>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"</(ul|ol)>", "\n\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"<(p|div|section|article)[^>]*>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"</(p|div|section|article)>", "\n\n", text, flags=re.IGNORECASE)
+    text = re.sub(
+        r"<h[1-4][^>]*>([\s\S]*?)</h[1-4]>",
+        lambda m: f"\n\n### {re.sub(r'<[^>]+>', '', m.group(1)).strip()}\n\n"
+        if re.sub(r"<[^>]+>", "", m.group(1)).strip()
+        else "",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    # 2) <strong>/<b> içindeki her satırı ayrı ayrı **koyu** yap (satır sonlarını koru)
+    def _bold_repl(m: re.Match[str]) -> str:
+        inner = re.sub(r"<[^>]+>", "", m.group(2))
+        lines = inner.split("\n")
+        out = []
+        for ln in lines:
+            lead = " " if ln[:1].isspace() else ""
+            trail = " " if ln[-1:].isspace() else ""
+            core = ln.strip()
+            out.append(f"{lead}**{core}**{trail}" if core else "")
+        return "\n".join(out)
+
+    text = re.sub(r"<(strong|b)[^>]*>([\s\S]*?)</\1>", _bold_repl, text, flags=re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = html_lib.unescape(text)
+    text = text.replace("\xa0", " ")
+    text = re.sub(r"[ \t]+\n", "\n", text)
+    text = re.sub(r"\n[ \t]+", "\n", text)
+    text = re.sub(r"[ \t]{2,}", " ", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip() or None

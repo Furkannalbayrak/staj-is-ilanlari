@@ -5,13 +5,14 @@ import random
 import re
 import time
 from datetime import datetime, timedelta, timezone
+from typing import Any
 from urllib.parse import urlencode
 
 from curl_cffi import requests as cf_requests
 from selectolax.lexbor import LexborHTMLParser
 
 from scraper.adapters.base import BaseAdapter
-from scraper.models import JobPayload, SourceConfig
+from scraper.models import EmploymentType, JobPayload, SourceConfig, WorkMode
 from scraper.normalizer import (
     compute_dedupe_hash,
     detect_category,
@@ -19,16 +20,96 @@ from scraper.normalizer import (
     detect_work_mode,
     is_turkey_location,
     normalize_city,
+    strip_html,
 )
 
 logger = logging.getLogger(__name__)
 
 SEARCH_ENDPOINT = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
+DETAIL_ENDPOINT = "https://www.linkedin.com/jobs-guest/jobs/api/jobPosting"
 IMPERSONATIONS = ["chrome124", "chrome120", "chrome116", "safari17_0"]
+
+_SCHEDULE_TR_MAP: dict[str, str] = {
+    "full-time": "Tam Zamanlı",
+    "part-time": "Yarı Zamanlı",
+    "internship": "Staj",
+    "contract": "Sözleşmeli",
+    "temporary": "Geçici",
+}
+
+_SCHEDULE_TO_EMP: dict[str, EmploymentType] = {
+    "full-time": "full_time",
+    "part-time": "part_time",
+    "internship": "internship",
+    "contract": "contract",
+}
+
+
+def _fetch_linkedin_detail(
+    session: cf_requests.Session, numeric_id: str, max_retries: int = 3
+) -> tuple[str | None, EmploymentType | None, str | None]:
+    """
+    Tekil LinkedIn ilanından gerçek istihdam türünü (Tam/Yarı Zamanlı/Sözleşmeli/Staj)
+    ve tam ilan açıklamasını çeker. 429 gelirse bekleyip oturum yenileyerek tekrar dener.
+    """
+    cur_session = session
+    for attempt in range(max_retries):
+        try:
+            if attempt > 0:
+                time.sleep(random.uniform(3.5, 6.0) * attempt)
+                cur_session = cf_requests.Session(
+                    impersonate=IMPERSONATIONS[attempt % len(IMPERSONATIONS)]
+                )
+            resp = cur_session.get(
+                f"{DETAIL_ENDPOINT}/{numeric_id}",
+                headers={"Accept-Language": "en-US,en;q=0.9"},
+                timeout=15,
+            )
+            if resp.status_code == 429:
+                continue
+            if resp.status_code != 200 or not resp.text:
+                return None, None, None
+
+            tree = LexborHTMLParser(resp.text)
+            work_schedule = None
+            real_emp_type: EmploymentType | None = None
+            for li in tree.css("li.description__job-criteria-item"):
+                h3 = li.css_first("h3")
+                sp = li.css_first("span")
+                if not h3 or not sp:
+                    continue
+                label = h3.text(strip=True).lower()
+                val = sp.text(strip=True).lower()
+                if "employment" in label or "istihdam" in label:
+                    work_schedule = _SCHEDULE_TR_MAP.get(val, sp.text(strip=True))
+                    real_emp_type = _SCHEDULE_TO_EMP.get(val)
+                    break
+
+            desc_node = tree.css_first(".show-more-less-html__markup, .description__text")
+            description = strip_html(desc_node.html) if desc_node and desc_node.html else None
+            return work_schedule, real_emp_type, description
+        except Exception:
+            if attempt == max_retries - 1:
+                return None, None, None
+    return None, None, None
+
+# LinkedIn resmi f_WT (Work Type) kodları -> standart work_mode
+WT_TO_WORK_MODE: dict[str, WorkMode] = {
+    "1": "onsite",
+    "2": "remote",
+    "3": "hybrid",
+}
+
+# LinkedIn resmi f_JT (Job Type) kodları -> standart employment_type
+JT_TO_EMP_TYPE: dict[str, EmploymentType] = {
+    "F": "full_time",
+    "P": "part_time",
+    "I": "internship",
+    "C": "contract",
+}
 
 
 def _parse_relative_time(text: str | None, fallback_date: str | None) -> datetime | None:
-    """LinkedIn kartındaki '2 hours ago', '35 minutes ago', 'Just now' metninden gerçek UTC zaman üretir."""
     now = datetime.now(timezone.utc)
     if text:
         low = text.strip().lower()
@@ -85,10 +166,11 @@ def _extract_job_id(card, href: str) -> str | None:
 class LinkedInGuestAdapter(BaseAdapter):
     """
     LinkedIn'in herkese açık guest arama API'sinden doğrudan veri çeker:
-    - Dinamik sayfalama (start += gelen kart sayısı -> hiç ilan atlamaz)
-    - Tek istekte gerçek şirket logoları (media.licdn.com) ve gerçek yayın saatleri
-    - 429 hız sınırında akıllı bekleme (exponential backoff) ve oturum yenileme
-    - En yeniden eskiye sıralı (sortBy=DD) artımlı tarama
+    - f_WT (1=Ofis, 2=Uzaktan, 3=Hibrit) ve f_JT (I=Staj, P=Yarı Zamanlı) kırılımlarıyla
+      sıfır ekstra istek atarak gerçek çalışma modeli ve istihdam türünü yakalar.
+    - Dinamik sayfalama (start += gelen kart sayısı -> hiç ilan atlamaz).
+    - Tek istekte gerçek şirket logoları ve gerçek yayın saatleri.
+    - 429 hız sınırında akıllı bekleme (exponential backoff) ve oturum yenileme.
     """
 
     def fetch_jobs(
@@ -98,16 +180,21 @@ class LinkedInGuestAdapter(BaseAdapter):
     ) -> list[JobPayload]:
         location = source.config.get("location", "Turkey")
         hours_old = int(source.config.get("hours_old", 24))
-        max_jobs_per_term = int(source.config.get("max_jobs_per_term", 250))
+        default_max_jobs = int(source.config.get("max_jobs_per_query", 80))
         turkey_only = bool(source.config.get("turkey_only", True))
         delay_min = float(source.config.get("delay_min_sec", 2.0))
         delay_max = float(source.config.get("delay_max_sec", 3.8))
         max_429_retries = int(source.config.get("max_429_retries", 2))
-        search_terms: list[str] = source.config.get("search_terms") or ["", "staj"]
+
+        queries: list[dict[str, Any]] = source.config.get("queries") or [
+            {"label": "uzaktan", "keywords": "", "f_WT": "2", "max_jobs": 80},
+            {"label": "hibrit", "keywords": "", "f_WT": "3", "max_jobs": 80},
+            {"label": "ofis", "keywords": "", "f_WT": "1", "max_jobs": 80},
+            {"label": "staj", "keywords": "", "f_JT": "I", "max_jobs": 80},
+        ]
 
         existing = existing_external_ids or set()
-        collected: list[JobPayload] = []
-        seen_in_run: set[str] = set()
+        collected_by_id: dict[str, JobPayload] = {}
         tpr_seconds = hours_old * 3600
 
         imp_idx = 0
@@ -118,13 +205,21 @@ class LinkedInGuestAdapter(BaseAdapter):
         }
 
         request_count = 0
-        for term in search_terms:
-            term_label = term or "<tüm-sektörler>"
+        for q in queries:
+            q_label = q.get("label") or q.get("keywords") or "<genel>"
+            q_keywords = str(q.get("keywords") or "").strip()
+            q_wt = str(q.get("f_WT") or "").strip()
+            q_jt = str(q.get("f_JT") or "").strip()
+            q_max = int(q.get("max_jobs", default_max_jobs))
+
+            forced_work_mode: WorkMode | None = WT_TO_WORK_MODE.get(q_wt)
+            forced_emp_type: EmploymentType | None = JT_TO_EMP_TYPE.get(q_jt)
+
             start = 0
-            term_collected = 0
+            q_collected = 0
             consecutive_existing = 0
 
-            while term_collected < max_jobs_per_term and start < 975:
+            while q_collected < q_max and start < 975:
                 if request_count > 0:
                     time.sleep(random.uniform(delay_min, delay_max))
                 request_count += 1
@@ -135,8 +230,12 @@ class LinkedInGuestAdapter(BaseAdapter):
                     "sortBy": "DD",
                     "start": start,
                 }
-                if term:
-                    params["keywords"] = term
+                if q_keywords:
+                    params["keywords"] = q_keywords
+                if q_wt:
+                    params["f_WT"] = q_wt
+                if q_jt:
+                    params["f_JT"] = q_jt
 
                 url = f"{SEARCH_ENDPOINT}?{urlencode(params)}"
                 resp = None
@@ -145,7 +244,7 @@ class LinkedInGuestAdapter(BaseAdapter):
                     try:
                         resp = session.get(url, headers=headers, timeout=20)
                     except Exception as exc:
-                        logger.warning("[linkedin] İstek hatası (%s, start=%d): %s", term_label, start, exc)
+                        logger.warning("[linkedin] İstek hatası (%s, start=%d): %s", q_label, start, exc)
                         resp = None
                         break
 
@@ -156,7 +255,7 @@ class LinkedInGuestAdapter(BaseAdapter):
                         wait_s = random.uniform(10.0, 16.0) * (attempt + 1)
                         logger.warning(
                             "[linkedin] 429 (%s, start=%d) — %.1f sn beklenip tekrar deneniyor (%d/%d)...",
-                            term_label,
+                            q_label,
                             start,
                             wait_s,
                             attempt + 1,
@@ -167,10 +266,10 @@ class LinkedInGuestAdapter(BaseAdapter):
                         session = cf_requests.Session(impersonate=IMPERSONATIONS[imp_idx])
                     else:
                         logger.warning(
-                            "[linkedin] 429 devam ediyor (%s, start=%d) — bu terim %d ilanla tamamlandı.",
-                            term_label,
+                            "[linkedin] 429 devam ediyor (%s, start=%d) — bu dilim %d ilanla tamamlandı.",
+                            q_label,
                             start,
-                            term_collected,
+                            q_collected,
                         )
 
                 if resp is None or resp.status_code != 200 or not resp.text.strip():
@@ -181,11 +280,10 @@ class LinkedInGuestAdapter(BaseAdapter):
                 if not cards:
                     break
 
-                # Dinamik sayfa ilerletme: LinkedIn kaç kart döndürdüyse tam o kadar ilerle
                 start += len(cards)
-
                 page_added = 0
-                stop_term = False
+                stop_query = False
+
                 for li in cards:
                     card = li.css_first("div.base-card, div.job-search-card") or li
                     link_node = card.css_first("a.base-card__full-link, a.base-search-card--link")
@@ -206,11 +304,19 @@ class LinkedInGuestAdapter(BaseAdapter):
                         continue
 
                     external_id = _extract_job_id(card, href)
-                    if not external_id or external_id in seen_in_run:
+                    if not external_id:
                         continue
-                    seen_in_run.add(external_id)
 
                     if turkey_only and loc_str and not is_turkey_location(loc_str):
+                        continue
+
+                    # Aynı ilan başka bir sorgudan (ör. uzaktan + staj) zaten geldiyse eksik alanları zenginleştir
+                    if external_id in collected_by_id:
+                        prev = collected_by_id[external_id]
+                        if forced_work_mode and prev.work_mode == "unknown":
+                            prev.work_mode = forced_work_mode
+                        if forced_emp_type == "internship":
+                            prev.employment_type = "internship"
                         continue
 
                     logo_url = _extract_logo_url(card)
@@ -219,49 +325,92 @@ class LinkedInGuestAdapter(BaseAdapter):
                     posted_at = _parse_relative_time(time_text, time_dt_attr)
                     city = normalize_city(loc_str)
 
+                    work_mode = forced_work_mode or detect_work_mode(loc_str, title)
+                    detected_emp = detect_employment_type(title)
+                    if forced_emp_type == "internship" or detected_emp == "internship":
+                        emp_type: EmploymentType = "internship"
+                    elif forced_emp_type:
+                        emp_type = forced_emp_type
+                    else:
+                        emp_type = detected_emp
+
                     if external_id in existing:
                         consecutive_existing += 1
                     else:
                         consecutive_existing = 0
 
-                    collected.append(
-                        JobPayload(
-                            company_name=company_name,
-                            company_logo_url=logo_url,
-                            source_platform="linkedin",
-                            external_id=external_id,
-                            dedupe_hash=compute_dedupe_hash(company_name, title, city),
-                            title=title,
-                            description=None,
-                            apply_url=href,
-                            location=loc_str,
-                            city=city,
-                            work_mode=detect_work_mode(loc_str, title),
-                            employment_type=detect_employment_type(title),
-                            category=detect_category(title),
-                            department=None,
-                            posted_at=posted_at,
-                        )
+                    collected_by_id[external_id] = JobPayload(
+                        company_name=company_name,
+                        company_logo_url=logo_url,
+                        source_platform="linkedin",
+                        external_id=external_id,
+                        dedupe_hash=compute_dedupe_hash(company_name, title, city),
+                        title=title,
+                        description=None,
+                        apply_url=href,
+                        location=loc_str,
+                        city=city,
+                        work_mode=work_mode,
+                        employment_type=emp_type,
+                        category=detect_category(title),
+                        department=None,
+                        posted_at=posted_at,
                     )
                     page_added += 1
-                    term_collected += 1
+                    q_collected += 1
 
-                    if consecutive_existing >= 15:
+                    # İlk zenginleştirme turlarında work_mode güncellemesi için 20'ye kadar izin ver
+                    if consecutive_existing >= 20:
                         logger.info(
                             "[linkedin] '%s' mevcut ilanlara ulaştı, artımlı tarama durduruldu.",
-                            term_label,
+                            q_label,
                         )
-                        stop_term = True
+                        stop_query = True
                         break
 
                 logger.info(
-                    "[linkedin] %s: bu sayfada +%d ilan (terim toplamı: %d)",
-                    term_label,
+                    "[linkedin] %s: bu sayfada +%d ilan (dilim toplamı: %d)",
+                    q_label,
                     page_added,
-                    term_collected,
+                    q_collected,
                 )
 
-                if stop_term or page_added == 0:
+                if stop_query or page_added == 0:
                     break
 
-        return collected
+        # Yeni gelen tüm LinkedIn ilanlarını (en fazla 150 adet) veritabanına girmeden önce
+        # gerçek 'Tam Zamanlı / Yarı Zamanlı / Sözleşmeli / Staj' bilgisi ve tam açıklamasıyla zenginleştir
+        enriched = 0
+        max_enrich = int(source.config.get("max_detail_enrichment", 150))
+        candidates = [
+            (ext_id, job)
+            for ext_id, job in collected_by_id.items()
+            if ext_id not in existing
+        ]
+        # Staj ilanlarına öncelik ver
+        candidates.sort(key=lambda pair: 0 if pair[1].employment_type == "internship" else 1)
+
+        for ext_id, job in candidates:
+            if enriched >= max_enrich:
+                break
+            numeric_id = ext_id.replace("li-", "").strip()
+            if not numeric_id.isdigit():
+                continue
+            time.sleep(random.uniform(0.5, 0.9))
+            sched, real_emp, desc = _fetch_linkedin_detail(session, numeric_id, max_retries=3)
+            if sched and sched != "Staj":
+                job.work_schedule = sched
+            if real_emp:
+                # Staj ilanında staj türü korunsun (Tam/Yarı Zamanlı bilgisi work_schedule'da durur)
+                if job.employment_type != "internship":
+                    job.employment_type = real_emp
+            if desc:
+                job.description = desc
+                if job.work_mode == "unknown":
+                    job.work_mode = detect_work_mode(desc)
+            enriched += 1
+
+        if enriched:
+            logger.info("[linkedin] %d yeni ilan gerçek istihdam türü ve açıklamayla zenginleştirildi.", enriched)
+
+        return list(collected_by_id.values())
