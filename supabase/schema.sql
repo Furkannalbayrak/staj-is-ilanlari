@@ -44,7 +44,7 @@ create table if not exists public.jobs (
   company_name text not null,
   company_logo_url text,
   source_platform text not null check (
-    source_platform in ('direct', 'linkedin', 'indeed', 'kariyernet')
+    source_platform in ('direct', 'linkedin', 'indeed', 'kariyernet', 'youthall')
   ),
   external_id text not null,
   dedupe_hash text not null,
@@ -58,9 +58,10 @@ create table if not exists public.jobs (
   work_mode text not null default 'unknown' check (
     work_mode in ('onsite', 'hybrid', 'remote', 'unknown')
   ),
-  employment_type text not null default 'full_time' check (
-    employment_type in ('full_time', 'part_time', 'internship', 'new_grad', 'contract')
+  employment_type text not null default 'unknown' check (
+    employment_type in ('full_time', 'part_time', 'internship', 'new_grad', 'contract', 'unknown')
   ),
+  work_schedule text, -- Örn: 'Tam Zamanlı', 'Yarı Zamanlı' (özellikle staj ilanları için)
   category text not null default 'other' check (
     category in (
       'software',
