@@ -93,6 +93,13 @@ def run_pipeline(
                     source.config["_unenriched_ids"] = db.get_unenriched_portal_external_ids(
                         platform
                     )
+            elif (
+                db
+                and source.source_type == "corporate"
+                and company_id
+                and source.adapter in ("ats.smartrecruiters", "ats.workday")
+            ):
+                existing_ids = db.get_existing_company_external_ids(company_id)
 
             adapter = adapter_cls()
             jobs = adapter.fetch_jobs(source, existing_external_ids=existing_ids)

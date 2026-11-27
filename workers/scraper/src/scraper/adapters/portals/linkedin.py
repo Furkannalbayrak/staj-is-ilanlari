@@ -381,6 +381,8 @@ class LinkedInGuestAdapter(BaseAdapter):
         # Yeni gelen ve daha önce detayı/türü eksik kalmış LinkedIn ilanlarını (en fazla 150 adet)
         # gerçek 'Tam Zamanlı / Yarı Zamanlı / Sözleşmeli / Staj' bilgisi ve tam açıklamasıyla zenginleştir
         enriched = 0
+        enriched_new = 0
+        enriched_backfill = 0
         max_enrich = int(source.config.get("max_detail_enrichment", 150))
         unenriched: set[str] = source.config.get("_unenriched_ids") or set()
         candidates = [
@@ -388,8 +390,13 @@ class LinkedInGuestAdapter(BaseAdapter):
             for ext_id, job in collected_by_id.items()
             if ext_id not in existing or ext_id in unenriched
         ]
-        # Staj ilanlarına öncelik ver
-        candidates.sort(key=lambda pair: 0 if pair[1].employment_type == "internship" else 1)
+        # Önce YENİ ilanlara (ve kendi içinde stajlara), sonra önceki turlardan eksik kalanlara öncelik ver
+        candidates.sort(
+            key=lambda pair: (
+                0 if pair[0] not in existing else 1,
+                0 if pair[1].employment_type == "internship" else 1,
+            )
+        )
 
         for ext_id, job in candidates:
             if enriched >= max_enrich:
@@ -410,8 +417,17 @@ class LinkedInGuestAdapter(BaseAdapter):
                 if job.work_mode == "unknown":
                     job.work_mode = detect_work_mode(desc)
             enriched += 1
+            if ext_id not in existing:
+                enriched_new += 1
+            else:
+                enriched_backfill += 1
 
         if enriched:
-            logger.info("[linkedin] %d yeni ilan gerçek istihdam türü ve açıklamayla zenginleştirildi.", enriched)
+            logger.info(
+                "[linkedin] %d ilan zenginleştirildi (%d yeni + %d eski eksik).",
+                enriched,
+                enriched_new,
+                enriched_backfill,
+            )
 
         return list(collected_by_id.values())

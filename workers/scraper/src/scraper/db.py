@@ -49,6 +49,18 @@ class Database:
         )
         return {row["external_id"] for row in (res.data or [])}
 
+    def get_existing_company_external_ids(self, company_id: str, limit: int = 2000) -> set[str]:
+        """Kurumsal kaynaklarda zaten kayıtlı ilanların detay sayfalarını tekrar çekmemek için ID'leri döndürür."""
+        res = (
+            self.client.table("jobs")
+            .select("external_id")
+            .eq("company_id", company_id)
+            .eq("source_platform", "direct")
+            .limit(limit)
+            .execute()
+        )
+        return {row["external_id"] for row in (res.data or [])}
+
     def get_unenriched_portal_external_ids(
         self, source_platform: str, limit: int = 500
     ) -> set[str]:
@@ -105,7 +117,7 @@ class Database:
             for row in res.data or []:
                 existing_by_hash[row["dedupe_hash"]] = row
 
-        # Mevcut (source_platform, external_id) eşleşmelerini sorgula
+        # Mevcut (source_platform, external_id) eşleşmelerini sorgula (hafif alanlarla)
         existing_by_ext: dict[tuple[str, str], dict[str, Any]] = {}
         by_platform: dict[str, list[str]] = {}
         for j in deduped_jobs:
@@ -115,7 +127,10 @@ class Database:
                 batch = ext_ids[i : i + 100]
                 res = (
                     self.client.table("jobs")
-                    .select("id, source_platform, external_id, dedupe_hash")
+                    .select(
+                        "id, source_platform, external_id, dedupe_hash, "
+                        "title, city, work_mode, employment_type, work_schedule, company_logo_url"
+                    )
                     .eq("source_platform", platform)
                     .in_("external_id", batch)
                     .execute()
@@ -124,12 +139,14 @@ class Database:
                     existing_by_ext[(row["source_platform"], row["external_id"])] = row
 
         to_insert: list[dict[str, Any]] = []
+        touch_ids: list[str] = []
 
         for job in deduped_jobs:
+            resolved_logo = job.company_logo_url or source.logo_url
             row_payload: dict[str, Any] = {
                 "company_id": company_id if source.source_type == "corporate" else None,
                 "company_name": job.company_name,
-                "company_logo_url": job.company_logo_url or source.logo_url,
+                "company_logo_url": resolved_logo,
                 "source_platform": job.source_platform,
                 "external_id": job.external_id,
                 "dedupe_hash": job.dedupe_hash,
@@ -149,18 +166,40 @@ class Database:
                 "closed_at": None,
             }
 
-            # 1) Aynı kaynak + aynı external_id zaten varsa güncelle
-            # Mevcut dolu description/work_schedule veya bilinen employment_type/work_mode'u asla boş/unknown ile ezme
+            # 1) Aynı kaynak + aynı external_id zaten varsa:
+            # Sadece gerçekten değişen/yeni zenginleşen satırlara tekil PATCH at,
+            # değişmeyenleri toplu (batch) last_seen_at güncellemesine al.
             ext_match = existing_by_ext.get((job.source_platform, job.external_id))
             if ext_match:
-                update_fields = {
-                    k: v
-                    for k, v in row_payload.items()
-                    if k not in ("dedupe_hash",)
-                    and not (k in ("description", "work_schedule", "company_logo_url", "posted_at") and v is None)
-                    and not (k in ("employment_type", "work_mode") and v == "unknown")
-                }
-                self.client.table("jobs").update(update_fields).eq("id", ext_match["id"]).execute()
+                needs_full_patch = (
+                    job.title != ext_match.get("title")
+                    or job.city != ext_match.get("city")
+                    or (job.work_mode != "unknown" and job.work_mode != ext_match.get("work_mode"))
+                    or (
+                        job.employment_type != "unknown"
+                        and job.employment_type != ext_match.get("employment_type")
+                    )
+                    or (
+                        job.work_schedule is not None
+                        and job.work_schedule != ext_match.get("work_schedule")
+                    )
+                    or (resolved_logo is not None and not ext_match.get("company_logo_url"))
+                    or (job.source_platform == "linkedin" and job.description is not None)
+                )
+                if needs_full_patch:
+                    update_fields = {
+                        k: v
+                        for k, v in row_payload.items()
+                        if k not in ("dedupe_hash",)
+                        and not (
+                            k in ("description", "work_schedule", "company_logo_url", "posted_at")
+                            and v is None
+                        )
+                        and not (k in ("employment_type", "work_mode") and v == "unknown")
+                    }
+                    self.client.table("jobs").update(update_fields).eq("id", ext_match["id"]).execute()
+                else:
+                    touch_ids.append(ext_match["id"])
                 updated_count += 1
                 continue
 
@@ -171,9 +210,7 @@ class Database:
                 incoming_is_direct = job.source_platform == "direct"
                 if existing_is_direct and not incoming_is_direct:
                     # Kurumsal kaynak zaten var -> sadece aktif tut, portal kaydını atla
-                    self.client.table("jobs").update({"last_seen_at": now_iso, "is_active": True}).eq(
-                        "id", hash_match["id"]
-                    ).execute()
+                    touch_ids.append(hash_match["id"])
                     updated_count += 1
                 else:
                     # Yeni gelen kurumsal kaynak (veya aynı öncelikte güncelleme) -> üzerine yaz
@@ -183,6 +220,13 @@ class Database:
 
             # 3) Tamamen yeni ilan
             to_insert.append(row_payload)
+
+        # Değişmeyen mevcut ilanların last_seen_at alanını 100'lü paketler halinde toplu güncelle
+        for i in range(0, len(touch_ids), 100):
+            batch = touch_ids[i : i + 100]
+            self.client.table("jobs").update(
+                {"last_seen_at": now_iso, "is_active": True, "closed_at": None}
+            ).in_("id", batch).execute()
 
         # Yeni ilanları toplu ekle
         for i in range(0, len(to_insert), 50):

@@ -68,6 +68,7 @@ class SmartRecruitersAdapter(BaseAdapter):
         company_identifier = source.config["company_identifier"]
         turkey_only = bool(source.config.get("turkey_only", True))
         fetch_details = bool(source.config.get("fetch_details", True))
+        existing = existing_external_ids or set()
         limit = 100
         offset = 0
 
@@ -122,10 +123,11 @@ class SmartRecruitersAdapter(BaseAdapter):
                     except ValueError:
                         posted_at = None
 
+                full_ext_id = f"{source.slug}:{ext_id}"
                 apply_url = f"https://jobs.smartrecruiters.com/{company_identifier}/{ext_id}"
                 description = None
 
-                if fetch_details and item.get("ref"):
+                if fetch_details and item.get("ref") and full_ext_id not in existing:
                     try:
                         time.sleep(0.12)
                         det_resp = client.get(item["ref"])
@@ -147,7 +149,7 @@ class SmartRecruitersAdapter(BaseAdapter):
                         company_name=source.name,
                         company_logo_url=source.logo_url,
                         source_platform="direct",
-                        external_id=f"{source.slug}:{ext_id}",
+                        external_id=full_ext_id,
                         dedupe_hash=compute_dedupe_hash(source.name, title, city),
                         title=title,
                         description=description,

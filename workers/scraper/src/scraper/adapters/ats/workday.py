@@ -49,14 +49,17 @@ class WorkdayAdapter(BaseAdapter):
             "Content-Type": "application/json",
         }
 
+        existing = existing_external_ids or set()
         seen_paths: dict[str, dict[str, Any]] = {}
+        consecutive_429_terms = 0
         with httpx.Client(timeout=25.0, follow_redirects=True, headers=headers) as client:
             for term in search_terms:
                 offset = 0
                 limit = 20
+                term_hit_429 = False
                 while offset < max_per_term:
                     resp = None
-                    for attempt in range(3):
+                    for attempt in range(2):
                         resp = client.post(
                             f"{base_cxs}/jobs",
                             json={
@@ -68,9 +71,12 @@ class WorkdayAdapter(BaseAdapter):
                         )
                         if resp.status_code != 429:
                             break
-                        time.sleep(2.0 * (attempt + 1))
+                        time.sleep(1.5 * (attempt + 1))
                     if resp is None or resp.status_code != 200:
+                        if resp is not None and resp.status_code == 429:
+                            term_hit_429 = True
                         break
+                    consecutive_429_terms = 0
                     data = resp.json()
                     postings = data.get("jobPostings") or []
                     if not postings:
@@ -90,6 +96,15 @@ class WorkdayAdapter(BaseAdapter):
                     if offset >= total or len(postings) < limit:
                         break
 
+                if term_hit_429:
+                    consecutive_429_terms += 1
+                    if consecutive_429_terms >= 2:
+                        logger.info(
+                            "[workday] %s hız sınırında (429), kalan arama terimleri atlandı.",
+                            source.slug,
+                        )
+                        break
+
             jobs: list[JobPayload] = []
             for ext_path, summary in seen_paths.items():
                 title = (summary.get("title") or "").strip()
@@ -102,38 +117,40 @@ class WorkdayAdapter(BaseAdapter):
                     (summary.get("bulletFields") or [None])[0]
                     or ext_path.rstrip("/").split("/")[-1]
                 )
+                candidate_ext_id = f"{source.slug}:{external_id}"
                 description = None
                 time_type = None
                 remote_type = None
                 posted_at = None
 
-                try:
-                    time.sleep(0.25)
-                    det_resp = None
-                    for attempt in range(3):
-                        det_resp = client.get(f"{base_cxs}{ext_path}")
-                        if det_resp.status_code != 429:
-                            break
-                        time.sleep(2.0 * (attempt + 1))
-                    if det_resp is not None and det_resp.status_code == 200:
-                        info = (det_resp.json() or {}).get("jobPostingInfo") or {}
-                        external_id = str(info.get("jobReqId") or info.get("id") or external_id)
-                        apply_url = info.get("externalUrl") or apply_url
-                        loc_text = info.get("location") or loc_text
-                        time_type = info.get("timeType")
-                        remote_type = info.get("remoteType")
-                        description = strip_html(info.get("jobDescription"))
+                if candidate_ext_id not in existing:
+                    try:
+                        time.sleep(0.2)
+                        det_resp = None
+                        for attempt in range(2):
+                            det_resp = client.get(f"{base_cxs}{ext_path}")
+                            if det_resp.status_code != 429:
+                                break
+                            time.sleep(1.5 * (attempt + 1))
+                        if det_resp is not None and det_resp.status_code == 200:
+                            info = (det_resp.json() or {}).get("jobPostingInfo") or {}
+                            external_id = str(info.get("jobReqId") or info.get("id") or external_id)
+                            apply_url = info.get("externalUrl") or apply_url
+                            loc_text = info.get("location") or loc_text
+                            time_type = info.get("timeType")
+                            remote_type = info.get("remoteType")
+                            description = strip_html(info.get("jobDescription"))
 
-                        raw_date = info.get("startDate")
-                        if isinstance(raw_date, str) and len(raw_date) >= 10:
-                            try:
-                                posted_at = datetime.strptime(
-                                    raw_date[:10], "%Y-%m-%d"
-                                ).replace(tzinfo=timezone.utc)
-                            except ValueError:
-                                posted_at = None
-                except Exception as exc:
-                    logger.debug("[workday] Detay okunamadı (%s): %s", ext_path, exc)
+                            raw_date = info.get("startDate")
+                            if isinstance(raw_date, str) and len(raw_date) >= 10:
+                                try:
+                                    posted_at = datetime.strptime(
+                                        raw_date[:10], "%Y-%m-%d"
+                                    ).replace(tzinfo=timezone.utc)
+                                except ValueError:
+                                    posted_at = None
+                    except Exception as exc:
+                        logger.debug("[workday] Detay okunamadı (%s): %s", ext_path, exc)
 
                 if turkey_only and loc_text and not is_turkey_location(loc_text):
                     continue
