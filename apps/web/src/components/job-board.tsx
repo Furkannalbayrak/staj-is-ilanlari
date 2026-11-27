@@ -61,9 +61,19 @@ interface JobBoardProps {
   emptyReason?: "no_env" | "no_jobs";
 }
 
-function formatCardLocation(city: string | null, location: string | null): string | null {
+function formatCardLocation(
+  city: string | null,
+  location: string | null,
+  sourcePlatform: SourcePlatform
+): string | null {
   if (!city && !location) return null;
-  if (location && location.includes(",")) {
+  if (
+    (sourcePlatform === "youthall" ||
+      sourcePlatform === "elemannet" ||
+      sourcePlatform === "secretcv") &&
+    location &&
+    location.includes(",")
+  ) {
     const parts = location
       .split(",")
       .map((s) => s.trim())
@@ -681,7 +691,11 @@ export function JobBoard({
 
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
                             {(() => {
-                              const locLabel = formatCardLocation(job.city, job.location);
+                              const locLabel = formatCardLocation(
+                                job.city,
+                                job.location,
+                                job.source_platform
+                              );
                               const items: React.ReactNode[] = [];
                               if (locLabel) {
                                 items.push(
