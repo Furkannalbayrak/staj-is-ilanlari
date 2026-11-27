@@ -49,6 +49,22 @@ class Database:
         )
         return {row["external_id"] for row in (res.data or [])}
 
+    def get_unenriched_portal_external_ids(
+        self, source_platform: str, limit: int = 500
+    ) -> set[str]:
+        """Detayı veya çalışma türü eksik kalmış aktif portal ilanlarının ID'lerini döndürür."""
+        res = (
+            self.client.table("jobs")
+            .select("external_id")
+            .eq("source_platform", source_platform)
+            .eq("is_active", True)
+            .or_("employment_type.eq.unknown,description.is.null")
+            .order("last_seen_at", desc=True)
+            .limit(limit)
+            .execute()
+        )
+        return {row["external_id"] for row in (res.data or [])}
+
     def upsert_jobs(
         self,
         source: SourceConfig,

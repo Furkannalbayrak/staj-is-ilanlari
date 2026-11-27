@@ -17,8 +17,10 @@ from scraper.adapters.ats.workday import WorkdayAdapter
 from scraper.adapters.base import BaseAdapter
 from scraper.adapters.custom.baykar import BaykarAdapter
 from scraper.adapters.custom.tusas import TusasAdapter
+from scraper.adapters.portals.elemannet import ElemanNetAdapter
 from scraper.adapters.portals.jobspy_portal import JobSpyPortalAdapter
 from scraper.adapters.portals.linkedin import LinkedInGuestAdapter
+from scraper.adapters.portals.secretcv import SecretcvAdapter
 from scraper.adapters.portals.techcareer import TechcareerAdapter
 from scraper.adapters.portals.youthall import YouthallAdapter
 from scraper.db import Database
@@ -43,6 +45,8 @@ ADAPTER_REGISTRY: dict[str, type[BaseAdapter]] = {
     "portals.linkedin": LinkedInGuestAdapter,
     "portals.youthall": YouthallAdapter,
     "portals.techcareer": TechcareerAdapter,
+    "portals.elemannet": ElemanNetAdapter,
+    "portals.secretcv": SecretcvAdapter,
     "portals.jobspy_portal": JobSpyPortalAdapter,
 }
 
@@ -85,6 +89,10 @@ def run_pipeline(
             if db and source.source_type == "portal":
                 platform = source.config.get("site_name", source.slug)
                 existing_ids = db.get_existing_external_ids(platform)
+                if platform == "linkedin":
+                    source.config["_unenriched_ids"] = db.get_unenriched_portal_external_ids(
+                        platform
+                    )
 
             adapter = adapter_cls()
             jobs = adapter.fetch_jobs(source, existing_external_ids=existing_ids)

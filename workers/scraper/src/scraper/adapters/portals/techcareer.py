@@ -41,6 +41,10 @@ def _clean_logo(url: str | None) -> str | None:
     if not url or not isinstance(url, str):
         return None
     u = url.strip()
+    if "cdn1.kariyer.net/" in u:
+        u = u.replace("http://cdn1.kariyer.net/", "https://img-kariyer.mncdn.com/").replace(
+            "https://cdn1.kariyer.net/", "https://img-kariyer.mncdn.com/"
+        )
     if u.startswith("http://"):
         u = "https://" + u[len("http://") :]
     return u if u.startswith("https://") else None

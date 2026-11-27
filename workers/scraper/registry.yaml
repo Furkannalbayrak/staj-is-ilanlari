@@ -14,6 +14,7 @@ sources:
     ats_type: lever
     adapter: ats.lever
     careers_url: https://jobs.lever.co/trendyol
+    logo_url: https://www.google.com/s2/favicons?domain=trendyol.com&sz=128
     full_sync: true
     config:
       board_token: trendyol
@@ -26,6 +27,7 @@ sources:
     ats_type: lever
     adapter: ats.lever
     careers_url: https://jobs.lever.co/dreamgames
+    logo_url: https://www.google.com/s2/favicons?domain=dreamgames.com&sz=128
     full_sync: true
     config:
       board_token: dreamgames
@@ -38,6 +40,7 @@ sources:
     ats_type: lever
     adapter: ats.lever
     careers_url: https://jobs.lever.co/commencis
+    logo_url: https://www.google.com/s2/favicons?domain=commencis.com&sz=128
     full_sync: true
     config:
       board_token: commencis
@@ -50,6 +53,7 @@ sources:
     ats_type: lever
     adapter: ats.lever
     careers_url: https://jobs.lever.co/iyzico
+    logo_url: https://www.google.com/s2/favicons?domain=iyzico.com&sz=128
     full_sync: true
     config:
       board_token: iyzico
@@ -62,6 +66,7 @@ sources:
     ats_type: lever
     adapter: ats.lever
     careers_url: https://jobs.eu.lever.co/lionbridge
+    logo_url: https://www.google.com/s2/favicons?domain=lionbridge.com&sz=128
     full_sync: true
     config:
       board_token: lionbridge
@@ -78,6 +83,7 @@ sources:
     ats_type: greenhouse
     adapter: ats.greenhouse
     careers_url: https://boards.greenhouse.io/peak
+    logo_url: https://www.google.com/s2/favicons?domain=peak.com&sz=128
     full_sync: true
     config:
       board_token: peak
@@ -90,6 +96,7 @@ sources:
     ats_type: greenhouse
     adapter: ats.greenhouse
     careers_url: https://boards.greenhouse.io/bybit
+    logo_url: https://www.google.com/s2/favicons?domain=bybit.com&sz=128
     full_sync: true
     config:
       board_token: bybit
@@ -102,6 +109,7 @@ sources:
     ats_type: greenhouse
     adapter: ats.greenhouse
     careers_url: https://boards.greenhouse.io/okx
+    logo_url: https://www.google.com/s2/favicons?domain=okx.com&sz=128
     full_sync: true
     config:
       board_token: okx
@@ -114,6 +122,7 @@ sources:
     ats_type: greenhouse
     adapter: ats.greenhouse
     careers_url: https://boards.greenhouse.io/binance
+    logo_url: https://www.google.com/s2/favicons?domain=binance.com&sz=128
     full_sync: true
     config:
       board_token: binance
@@ -129,6 +138,7 @@ sources:
     ats_type: smartrecruiters
     adapter: ats.smartrecruiters
     careers_url: https://jobs.smartrecruiters.com/BoschGroup
+    logo_url: https://www.google.com/s2/favicons?domain=bosch.com&sz=128
     full_sync: true
     config:
       company_identifier: BoschGroup
@@ -141,6 +151,7 @@ sources:
     ats_type: smartrecruiters
     adapter: ats.smartrecruiters
     careers_url: https://jobs.smartrecruiters.com/DeliveryHero
+    logo_url: https://www.google.com/s2/favicons?domain=yemeksepeti.com&sz=128
     full_sync: true
     config:
       company_identifier: DeliveryHero
@@ -153,6 +164,7 @@ sources:
     ats_type: smartrecruiters
     adapter: ats.smartrecruiters
     careers_url: https://jobs.smartrecruiters.com/AveryDennison
+    logo_url: https://www.google.com/s2/favicons?domain=averydennison.com&sz=128
     full_sync: true
     config:
       company_identifier: AveryDennison
@@ -165,6 +177,7 @@ sources:
     ats_type: smartrecruiters
     adapter: ats.smartrecruiters
     careers_url: https://jobs.smartrecruiters.com/Eurofins
+    logo_url: https://www.google.com/s2/favicons?domain=eurofins.com&sz=128
     full_sync: true
     config:
       company_identifier: Eurofins
@@ -177,6 +190,7 @@ sources:
     ats_type: smartrecruiters
     adapter: ats.smartrecruiters
     careers_url: https://jobs.smartrecruiters.com/NielsenIQ
+    logo_url: https://www.google.com/s2/favicons?domain=nielseniq.com&sz=128
     full_sync: true
     config:
       company_identifier: NielsenIQ
@@ -189,6 +203,7 @@ sources:
     ats_type: smartrecruiters
     adapter: ats.smartrecruiters
     careers_url: https://jobs.smartrecruiters.com/JYSK
+    logo_url: https://www.google.com/s2/favicons?domain=jysk.com.tr&sz=128
     full_sync: true
     config:
       company_identifier: JYSK
@@ -201,6 +216,7 @@ sources:
     ats_type: smartrecruiters
     adapter: ats.smartrecruiters
     careers_url: https://jobs.smartrecruiters.com/Securitas
+    logo_url: https://www.google.com/s2/favicons?domain=securitas.com&sz=128
     full_sync: true
     config:
       company_identifier: Securitas
@@ -216,6 +232,7 @@ sources:
     ats_type: workday
     adapter: ats.workday
     careers_url: https://pg.wd5.myworkdayjobs.com/1000
+    logo_url: https://www.google.com/s2/favicons?domain=pg.com&sz=128
     full_sync: true
     config:
       host: pg.wd5.myworkdayjobs.com
@@ -230,6 +247,7 @@ sources:
     ats_type: workday
     adapter: ats.workday
     careers_url: https://pfizer.wd1.myworkdayjobs.com/PfizerCareers
+    logo_url: https://www.google.com/s2/favicons?domain=pfizer.com&sz=128
     full_sync: true
     config:
       host: pfizer.wd1.myworkdayjobs.com
@@ -244,6 +262,7 @@ sources:
     ats_type: workday
     adapter: ats.workday
     careers_url: https://mastercard.wd1.myworkdayjobs.com/CorporateCareers
+    logo_url: https://www.google.com/s2/favicons?domain=mastercard.com&sz=128
     full_sync: true
     config:
       host: mastercard.wd1.myworkdayjobs.com
@@ -258,6 +277,7 @@ sources:
     ats_type: workday
     adapter: ats.workday
     careers_url: https://hp.wd5.myworkdayjobs.com/ExternalCareerSite
+    logo_url: https://www.google.com/s2/favicons?domain=hp.com&sz=128
     full_sync: true
     config:
       host: hp.wd5.myworkdayjobs.com
@@ -272,6 +292,7 @@ sources:
     ats_type: workday
     adapter: ats.workday
     careers_url: https://citi.wd5.myworkdayjobs.com/2
+    logo_url: https://www.google.com/s2/favicons?domain=citi.com&sz=128
     full_sync: true
     config:
       host: citi.wd5.myworkdayjobs.com
@@ -289,6 +310,7 @@ sources:
     ats_type: custom
     adapter: ats.ashby
     careers_url: https://jobs.ashbyhq.com/codeway
+    logo_url: https://www.google.com/s2/favicons?domain=codeway.co&sz=128
     full_sync: true
     config:
       board_token: codeway
@@ -304,6 +326,7 @@ sources:
     ats_type: custom
     adapter: custom.baykar
     careers_url: https://kariyer.baykartech.com/tr/acik-pozisyonlar/
+    logo_url: https://www.google.com/s2/favicons?domain=baykartech.com&sz=128
     full_sync: true
     config:
       max_pages: 40
@@ -315,11 +338,12 @@ sources:
     ats_type: custom
     adapter: custom.tusas
     careers_url: https://kariyer.tusas.com/acik-pozisyonlarimiz
+    logo_url: https://www.google.com/s2/favicons?domain=tusas.com&sz=128
     full_sync: true
     config: {}
 
   # ===========================================================================
-  # 5) BÜYÜK İŞ PORTALLARI
+  # 7) BÜYÜK İŞ PORTALLARI
   # ===========================================================================
   - slug: linkedin-tr
     name: LinkedIn
@@ -396,3 +420,30 @@ sources:
       site_name: techcareer
       max_pages: 1
       fetch_details: true
+
+  - slug: secretcv
+    name: Secretcv
+    enabled: true
+    source_type: portal
+    ats_type: portal
+    adapter: portals.secretcv
+    careers_url: https://www.secretcv.com/is-ilanlari/
+    full_sync: false
+    config:
+      site_name: secretcv
+      max_pages: 4
+      max_new_details: 60
+
+  - slug: elemannet
+    name: Eleman.net
+    enabled: true
+    source_type: portal
+    ats_type: portal
+    adapter: portals.elemannet
+    careers_url: https://www.eleman.net/is-ilanlari
+    full_sync: false
+    config:
+      site_name: elemannet
+      max_new_details: 45
+      list_urls:
+        - https://www.eleman.net/is-ilanlari

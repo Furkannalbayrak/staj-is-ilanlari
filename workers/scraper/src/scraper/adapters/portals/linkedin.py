@@ -378,14 +378,15 @@ class LinkedInGuestAdapter(BaseAdapter):
                 if stop_query or page_added == 0:
                     break
 
-        # Yeni gelen tüm LinkedIn ilanlarını (en fazla 150 adet) veritabanına girmeden önce
+        # Yeni gelen ve daha önce detayı/türü eksik kalmış LinkedIn ilanlarını (en fazla 150 adet)
         # gerçek 'Tam Zamanlı / Yarı Zamanlı / Sözleşmeli / Staj' bilgisi ve tam açıklamasıyla zenginleştir
         enriched = 0
         max_enrich = int(source.config.get("max_detail_enrichment", 150))
+        unenriched: set[str] = source.config.get("_unenriched_ids") or set()
         candidates = [
             (ext_id, job)
             for ext_id, job in collected_by_id.items()
-            if ext_id not in existing
+            if ext_id not in existing or ext_id in unenriched
         ]
         # Staj ilanlarına öncelik ver
         candidates.sort(key=lambda pair: 0 if pair[1].employment_type == "internship" else 1)
