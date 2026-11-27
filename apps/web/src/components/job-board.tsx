@@ -40,6 +40,21 @@ interface JobBoardProps {
   emptyReason?: "no_env" | "no_jobs";
 }
 
+function formatCardLocation(city: string | null, location: string | null): string | null {
+  if (!city && !location) return null;
+  if (location && location.includes(",")) {
+    const parts = location
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parts.length > 1) {
+      const primary = city || parts[0];
+      return `${primary} +${parts.length - 1} şehir`;
+    }
+  }
+  return city || location;
+}
+
 export function JobBoard({
   initialJobs,
   initialSavedIds,
@@ -492,36 +507,48 @@ export function JobBoard({
                           </h2>
 
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
-                            <span className="inline-flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {job.city || job.location || "Türkiye"}
-                            </span>
-                            {job.employment_type !== "unknown" && (
-                              <>
-                                <span>·</span>
-                                <span>{EMPLOYMENT_TYPE_LABELS[job.employment_type]}</span>
-                              </>
-                            )}
-                            {job.work_schedule &&
-                              job.work_schedule !==
-                                EMPLOYMENT_TYPE_LABELS[job.employment_type] && (
-                                <>
-                                  <span>·</span>
-                                  <span>{job.work_schedule}</span>
-                                </>
-                              )}
-                            {job.work_mode !== "unknown" && (
-                              <>
-                                <span>·</span>
-                                <span>{WORK_MODE_LABELS[job.work_mode]}</span>
-                              </>
-                            )}
-                            {job.category !== "other" && (
-                              <>
-                                <span>·</span>
-                                <span>{CATEGORY_LABELS[job.category]}</span>
-                              </>
-                            )}
+                            {(() => {
+                              const locLabel = formatCardLocation(job.city, job.location);
+                              const items: React.ReactNode[] = [];
+                              if (locLabel) {
+                                items.push(
+                                  <span key="loc" className="inline-flex items-center gap-1">
+                                    <MapPin className="h-3 w-3" />
+                                    {locLabel}
+                                  </span>
+                                );
+                              }
+                              if (job.employment_type !== "unknown") {
+                                items.push(
+                                  <span key="emp">
+                                    {EMPLOYMENT_TYPE_LABELS[job.employment_type]}
+                                  </span>
+                                );
+                              }
+                              if (
+                                job.work_schedule &&
+                                job.work_schedule !==
+                                  EMPLOYMENT_TYPE_LABELS[job.employment_type]
+                              ) {
+                                items.push(<span key="sched">{job.work_schedule}</span>);
+                              }
+                              if (job.work_mode !== "unknown") {
+                                items.push(
+                                  <span key="wm">{WORK_MODE_LABELS[job.work_mode]}</span>
+                                );
+                              }
+                              if (job.category !== "other") {
+                                items.push(
+                                  <span key="cat">{CATEGORY_LABELS[job.category]}</span>
+                                );
+                              }
+                              return items.map((item, idx) => (
+                                <span key={idx} className="inline-flex items-center gap-3">
+                                  {idx > 0 && <span>·</span>}
+                                  {item}
+                                </span>
+                              ));
+                            })()}
                           </div>
                         </div>
                       </div>

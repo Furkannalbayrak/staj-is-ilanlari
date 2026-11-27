@@ -286,15 +286,17 @@ export function JobDrawer({
 
         {/* Metadata Badges */}
         <div className="flex flex-wrap gap-2 border-b border-zinc-200 bg-zinc-50/70 px-6 py-3.5 text-xs dark:border-zinc-800 dark:bg-zinc-900/40">
-          <span className="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
-            <MapPin className="h-3.5 w-3.5 text-zinc-400" />
-            {job.city || job.location || "Türkiye"}
-          </span>
+          {(job.location || job.city) && (
+            <span className="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white px-2.5 py-1 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
+              <MapPin className="h-3.5 w-3.5 shrink-0 text-zinc-400" />
+              {job.location || job.city}
+            </span>
+          )}
           {(() => {
             const baseLabel =
               job.employment_type !== "unknown"
                 ? EMPLOYMENT_TYPE_LABELS[job.employment_type]
-                : "";
+                : job.work_schedule || "";
             const realMetaType = loadedMeta?.employmentType || "";
             const effectiveLabel =
               job.employment_type !== "internship" && realMetaType
