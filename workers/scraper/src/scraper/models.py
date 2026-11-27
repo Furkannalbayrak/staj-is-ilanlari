@@ -16,7 +16,17 @@ AtsType = Literal[
     "custom",
     "portal",
 ]
-SourcePlatform = Literal["direct", "linkedin", "indeed", "kariyernet", "youthall"]
+SourcePlatform = Literal[
+    "direct",
+    "linkedin",
+    "indeed",
+    "kariyernet",
+    "youthall",
+    "techcareer",
+    "toptalent",
+    "secretcv",
+    "elemannet",
+]
 WorkMode = Literal["onsite", "hybrid", "remote", "unknown"]
 EmploymentType = Literal["full_time", "part_time", "internship", "new_grad", "contract", "unknown"]
 JobCategory = Literal[

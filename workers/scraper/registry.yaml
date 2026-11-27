@@ -4,46 +4,323 @@
 # =============================================================================
 
 sources:
-  # 1) ORTAK ATS KAYNAĞI (Lever JSON API)
-  # Örnek: Insider (Türkiye merkezli global teknoloji şirketi)
-  - slug: insider
-    name: Insider
-    enabled: false
+  # ===========================================================================
+  # 1) KURUMSAL ŞİRKETLER — LEVER ATS (Resmi JSON API, full_sync: true)
+  # ===========================================================================
+  - slug: trendyol
+    name: Trendyol
+    enabled: true
     source_type: corporate
     ats_type: lever
     adapter: ats.lever
-    careers_url: https://jobs.lever.co/useinsider
+    careers_url: https://jobs.lever.co/trendyol
     full_sync: true
     config:
-      board_token: useinsider
+      board_token: trendyol
       turkey_only: true
 
-  # Örnek Greenhouse şirketi (istenildiğinde enabled: true yapılabilir)
-  - slug: sample-greenhouse
-    name: Örnek Greenhouse Şirketi
-    enabled: false
+  - slug: dream-games
+    name: Dream Games
+    enabled: true
+    source_type: corporate
+    ats_type: lever
+    adapter: ats.lever
+    careers_url: https://jobs.lever.co/dreamgames
+    full_sync: true
+    config:
+      board_token: dreamgames
+      turkey_only: true
+
+  - slug: commencis
+    name: Commencis
+    enabled: true
+    source_type: corporate
+    ats_type: lever
+    adapter: ats.lever
+    careers_url: https://jobs.lever.co/commencis
+    full_sync: true
+    config:
+      board_token: commencis
+      turkey_only: true
+
+  - slug: iyzico
+    name: iyzico
+    enabled: true
+    source_type: corporate
+    ats_type: lever
+    adapter: ats.lever
+    careers_url: https://jobs.lever.co/iyzico
+    full_sync: true
+    config:
+      board_token: iyzico
+      turkey_only: true
+
+  - slug: lionbridge-tr
+    name: Lionbridge
+    enabled: true
+    source_type: corporate
+    ats_type: lever
+    adapter: ats.lever
+    careers_url: https://jobs.eu.lever.co/lionbridge
+    full_sync: true
+    config:
+      board_token: lionbridge
+      eu: true
+      turkey_only: true
+
+  # ===========================================================================
+  # 2) KURUMSAL ŞİRKETLER — GREENHOUSE ATS (Resmi JSON API, full_sync: true)
+  # ===========================================================================
+  - slug: peak
+    name: Peak
+    enabled: true
     source_type: corporate
     ats_type: greenhouse
     adapter: ats.greenhouse
-    careers_url: https://boards.greenhouse.io/example
+    careers_url: https://boards.greenhouse.io/peak
     full_sync: true
     config:
-      board_token: example
+      board_token: peak
       turkey_only: true
 
-  # 2) ÖZEL KURUMSAL KARİYER SAYFASI (İzole Custom Adapter)
+  - slug: bybit-tr
+    name: Bybit
+    enabled: true
+    source_type: corporate
+    ats_type: greenhouse
+    adapter: ats.greenhouse
+    careers_url: https://boards.greenhouse.io/bybit
+    full_sync: true
+    config:
+      board_token: bybit
+      turkey_only: true
+
+  - slug: okx-tr
+    name: OKX
+    enabled: true
+    source_type: corporate
+    ats_type: greenhouse
+    adapter: ats.greenhouse
+    careers_url: https://boards.greenhouse.io/okx
+    full_sync: true
+    config:
+      board_token: okx
+      turkey_only: true
+
+  - slug: binance-tr
+    name: Binance
+    enabled: true
+    source_type: corporate
+    ats_type: greenhouse
+    adapter: ats.greenhouse
+    careers_url: https://boards.greenhouse.io/binance
+    full_sync: true
+    config:
+      board_token: binance
+      turkey_only: true
+
+  # ===========================================================================
+  # 3) KURUMSAL ŞİRKETLER — SMARTRECRUITERS ATS (Resmi JSON API, full_sync: true)
+  # ===========================================================================
+  - slug: bosch-tr
+    name: Bosch
+    enabled: true
+    source_type: corporate
+    ats_type: smartrecruiters
+    adapter: ats.smartrecruiters
+    careers_url: https://jobs.smartrecruiters.com/BoschGroup
+    full_sync: true
+    config:
+      company_identifier: BoschGroup
+      turkey_only: true
+
+  - slug: yemeksepeti
+    name: Yemeksepeti
+    enabled: true
+    source_type: corporate
+    ats_type: smartrecruiters
+    adapter: ats.smartrecruiters
+    careers_url: https://jobs.smartrecruiters.com/DeliveryHero
+    full_sync: true
+    config:
+      company_identifier: DeliveryHero
+      turkey_only: true
+
+  - slug: avery-dennison-tr
+    name: Avery Dennison
+    enabled: true
+    source_type: corporate
+    ats_type: smartrecruiters
+    adapter: ats.smartrecruiters
+    careers_url: https://jobs.smartrecruiters.com/AveryDennison
+    full_sync: true
+    config:
+      company_identifier: AveryDennison
+      turkey_only: true
+
+  - slug: eurofins-tr
+    name: Eurofins
+    enabled: true
+    source_type: corporate
+    ats_type: smartrecruiters
+    adapter: ats.smartrecruiters
+    careers_url: https://jobs.smartrecruiters.com/Eurofins
+    full_sync: true
+    config:
+      company_identifier: Eurofins
+      turkey_only: true
+
+  - slug: nielseniq-tr
+    name: NielsenIQ
+    enabled: true
+    source_type: corporate
+    ats_type: smartrecruiters
+    adapter: ats.smartrecruiters
+    careers_url: https://jobs.smartrecruiters.com/NielsenIQ
+    full_sync: true
+    config:
+      company_identifier: NielsenIQ
+      turkey_only: true
+
+  - slug: jysk-tr
+    name: JYSK
+    enabled: true
+    source_type: corporate
+    ats_type: smartrecruiters
+    adapter: ats.smartrecruiters
+    careers_url: https://jobs.smartrecruiters.com/JYSK
+    full_sync: true
+    config:
+      company_identifier: JYSK
+      turkey_only: true
+
+  - slug: securitas-tr
+    name: Securitas
+    enabled: true
+    source_type: corporate
+    ats_type: smartrecruiters
+    adapter: ats.smartrecruiters
+    careers_url: https://jobs.smartrecruiters.com/Securitas
+    full_sync: true
+    config:
+      company_identifier: Securitas
+      turkey_only: true
+
+  # ===========================================================================
+  # 4) KURUMSAL ŞİRKETLER — WORKDAY ATS (Resmi CXS JSON API, full_sync: true)
+  # ===========================================================================
+  - slug: pg-tr
+    name: P&G
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://pg.wd5.myworkdayjobs.com/1000
+    full_sync: true
+    config:
+      host: pg.wd5.myworkdayjobs.com
+      tenant: pg
+      board: "1000"
+      turkey_only: true
+
+  - slug: pfizer-tr
+    name: Pfizer
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://pfizer.wd1.myworkdayjobs.com/PfizerCareers
+    full_sync: true
+    config:
+      host: pfizer.wd1.myworkdayjobs.com
+      tenant: pfizer
+      board: PfizerCareers
+      turkey_only: true
+
+  - slug: mastercard-tr
+    name: Mastercard
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://mastercard.wd1.myworkdayjobs.com/CorporateCareers
+    full_sync: true
+    config:
+      host: mastercard.wd1.myworkdayjobs.com
+      tenant: mastercard
+      board: CorporateCareers
+      turkey_only: true
+
+  - slug: hp-tr
+    name: HP
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://hp.wd5.myworkdayjobs.com/ExternalCareerSite
+    full_sync: true
+    config:
+      host: hp.wd5.myworkdayjobs.com
+      tenant: hp
+      board: ExternalCareerSite
+      turkey_only: true
+
+  - slug: citi-tr
+    name: Citi
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://citi.wd5.myworkdayjobs.com/2
+    full_sync: true
+    config:
+      host: citi.wd5.myworkdayjobs.com
+      tenant: citi
+      board: "2"
+      turkey_only: true
+
+  # ===========================================================================
+  # 5) KURUMSAL ŞİRKETLER — ASHBY / WORKABLE ATS (Resmi JSON API, full_sync: true)
+  # ===========================================================================
+  - slug: codeway
+    name: Codeway
+    enabled: true
+    source_type: corporate
+    ats_type: custom
+    adapter: ats.ashby
+    careers_url: https://jobs.ashbyhq.com/codeway
+    full_sync: true
+    config:
+      board_token: codeway
+      turkey_only: true
+
+  # ===========================================================================
+  # 6) ÖZEL KURUMSAL KARİYER SAYFALARI (Türk Savunma Sanayi, full_sync: true)
+  # ===========================================================================
   - slug: baykar
     name: Baykar Teknoloji
-    enabled: false
+    enabled: true
     source_type: corporate
     ats_type: custom
     adapter: custom.baykar
-    careers_url: https://kariyer.baykartech.com
+    careers_url: https://kariyer.baykartech.com/tr/acik-pozisyonlar/
     full_sync: true
     config:
-      base_url: https://kariyer.baykartech.com
+      max_pages: 40
 
-  # 3) BÜYÜK İŞ PORTALI (LinkedIn Doğrudan Guest API - Logo + Gerçek Saat + Çalışma Modeli)
+  - slug: tusas
+    name: TUSAŞ
+    enabled: true
+    source_type: corporate
+    ats_type: custom
+    adapter: custom.tusas
+    careers_url: https://kariyer.tusas.com/acik-pozisyonlarimiz
+    full_sync: true
+    config: {}
+
+  # ===========================================================================
+  # 5) BÜYÜK İŞ PORTALLARI
+  # ===========================================================================
   - slug: linkedin-tr
     name: LinkedIn
     enabled: true
@@ -71,7 +348,6 @@ sources:
           keywords: "intern"
           max_jobs: 100
 
-  # 4) YOUTHALL (Türkiye Staj, Yeni Mezun ve İş İlanları - Logolu & Hızlı)
   - slug: youthall
     name: Youthall
     enabled: true
@@ -85,3 +361,38 @@ sources:
       max_pages: 10
       delay_min_sec: 1.0
       delay_max_sec: 2.0
+
+  - slug: indeed-tr
+    name: Indeed
+    enabled: true
+    source_type: portal
+    ats_type: portal
+    adapter: portals.jobspy_portal
+    careers_url: https://tr.indeed.com
+    full_sync: false
+    config:
+      site_name: indeed
+      location: Turkey
+      country_indeed: Turkey
+      turkey_only: true
+      hours_old: 24
+      results_wanted: 100
+      delay_min_sec: 2.5
+      delay_max_sec: 4.5
+      search_terms:
+        - ""
+        - "staj"
+        - "intern"
+
+  - slug: techcareer
+    name: Techcareer.net
+    enabled: true
+    source_type: portal
+    ats_type: portal
+    adapter: portals.techcareer
+    careers_url: https://www.techcareer.net/jobs
+    full_sync: false
+    config:
+      site_name: techcareer
+      max_pages: 1
+      fetch_details: true

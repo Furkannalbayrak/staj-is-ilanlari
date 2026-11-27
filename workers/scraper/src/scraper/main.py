@@ -8,12 +8,18 @@ from pathlib import Path
 import yaml
 from dotenv import load_dotenv
 
+from scraper.adapters.ats.ashby import AshbyAdapter
 from scraper.adapters.ats.greenhouse import GreenhouseAdapter
 from scraper.adapters.ats.lever import LeverAdapter
+from scraper.adapters.ats.smartrecruiters import SmartRecruitersAdapter
+from scraper.adapters.ats.workable import WorkableAdapter
+from scraper.adapters.ats.workday import WorkdayAdapter
 from scraper.adapters.base import BaseAdapter
 from scraper.adapters.custom.baykar import BaykarAdapter
+from scraper.adapters.custom.tusas import TusasAdapter
 from scraper.adapters.portals.jobspy_portal import JobSpyPortalAdapter
 from scraper.adapters.portals.linkedin import LinkedInGuestAdapter
+from scraper.adapters.portals.techcareer import TechcareerAdapter
 from scraper.adapters.portals.youthall import YouthallAdapter
 from scraper.db import Database
 from scraper.models import ScrapeResult, SourceConfig
@@ -28,9 +34,15 @@ logger = logging.getLogger("scraper.main")
 ADAPTER_REGISTRY: dict[str, type[BaseAdapter]] = {
     "ats.lever": LeverAdapter,
     "ats.greenhouse": GreenhouseAdapter,
+    "ats.smartrecruiters": SmartRecruitersAdapter,
+    "ats.workday": WorkdayAdapter,
+    "ats.ashby": AshbyAdapter,
+    "ats.workable": WorkableAdapter,
     "custom.baykar": BaykarAdapter,
+    "custom.tusas": TusasAdapter,
     "portals.linkedin": LinkedInGuestAdapter,
     "portals.youthall": YouthallAdapter,
+    "portals.techcareer": TechcareerAdapter,
     "portals.jobspy_portal": JobSpyPortalAdapter,
 }
 
@@ -70,7 +82,7 @@ def run_pipeline(
         try:
             company_id = db.ensure_company(source) if db else None
             existing_ids: set[str] | None = None
-            if db and not source.full_sync:
+            if db and source.source_type == "portal":
                 platform = source.config.get("site_name", source.slug)
                 existing_ids = db.get_existing_external_ids(platform)
 

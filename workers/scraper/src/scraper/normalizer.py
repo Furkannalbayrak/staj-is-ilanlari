@@ -160,11 +160,11 @@ def detect_employment_type(*texts: str | None) -> EmploymentType:
         return "internship"
     if any(k in combined for k in ("yeni mezun", "new grad", "graduate program", "mt program", "management trainee")):
         return "new_grad"
-    if any(k in combined for k in ("part time", "yari zamanli")):
+    if any(k in combined for k in ("part time", "parttime", "yari zamanli")):
         return "part_time"
     if any(k in combined for k in ("sozlesmeli", "contract", "freelance", "proje bazli")):
         return "contract"
-    if any(k in combined for k in ("full time", "tam zamanli")):
+    if any(k in combined for k in ("full time", "fulltime", "tam zamanli")):
         return "full_time"
     return "unknown"
 

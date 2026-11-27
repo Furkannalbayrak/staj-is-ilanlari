@@ -30,7 +30,8 @@ class LeverAdapter(BaseAdapter):
     ) -> list[JobPayload]:
         board_token = source.config["board_token"]
         turkey_only = bool(source.config.get("turkey_only", True))
-        url = f"https://api.lever.co/v0/postings/{board_token}?mode=json"
+        api_host = "api.eu.lever.co" if source.config.get("eu") else "api.lever.co"
+        url = f"https://{api_host}/v0/postings/{board_token}?mode=json"
 
         resp = httpx.get(url, timeout=25.0, follow_redirects=True)
         resp.raise_for_status()
@@ -40,9 +41,10 @@ class LeverAdapter(BaseAdapter):
         for item in postings:
             categories = item.get("categories") or {}
             location = categories.get("location") or item.get("country") or ""
+            all_locs = " ".join(categories.get("allLocations") or [])
             workplace = item.get("workplaceType") or ""
 
-            if turkey_only and not is_turkey_location(location):
+            if turkey_only and item.get("country") != "TR" and not is_turkey_location(f"{location} {all_locs}"):
                 continue
 
             title = (item.get("text") or "").strip()
@@ -51,16 +53,16 @@ class LeverAdapter(BaseAdapter):
             if not title or not apply_url or not external_id:
                 continue
 
-            city = normalize_city(location)
+            city = normalize_city(location) or normalize_city(all_locs)
             department = categories.get("department") or categories.get("team")
             commitment = categories.get("commitment")
 
-            desc_parts = [item.get("descriptionPlain") or strip_html(item.get("description"))]
+            desc_parts = [strip_html(item.get("description")) or item.get("descriptionPlain")]
             for lst in item.get("lists") or []:
-                header = lst.get("text")
+                header = (lst.get("text") or "").strip()
                 body = strip_html(lst.get("content"))
                 if header and body:
-                    desc_parts.append(f"{header}\n{body}")
+                    desc_parts.append(f"### {header}\n{body}")
             description = "\n\n".join(p for p in desc_parts if p) or None
 
             posted_at = None
@@ -71,6 +73,7 @@ class LeverAdapter(BaseAdapter):
             jobs.append(
                 JobPayload(
                     company_name=source.name,
+                    company_logo_url=source.logo_url,
                     source_platform="direct",
                     external_id=f"{source.slug}:{external_id}",
                     dedupe_hash=compute_dedupe_hash(source.name, title, city),

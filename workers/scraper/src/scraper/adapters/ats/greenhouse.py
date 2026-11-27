@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html as html_lib
 from datetime import datetime
 
 import httpx
@@ -51,7 +52,8 @@ class GreenhouseAdapter(BaseAdapter):
             city = normalize_city(location)
             departments = item.get("departments") or []
             department = departments[0].get("name") if departments else None
-            description = strip_html(item.get("content"))
+            raw_content = item.get("content")
+            description = strip_html(html_lib.unescape(raw_content)) if raw_content else None
 
             posted_at = None
             raw_date = item.get("updated_at") or item.get("first_published")
@@ -64,6 +66,7 @@ class GreenhouseAdapter(BaseAdapter):
             jobs.append(
                 JobPayload(
                     company_name=source.name,
+                    company_logo_url=source.logo_url,
                     source_platform="direct",
                     external_id=f"{source.slug}:{external_id}",
                     dedupe_hash=compute_dedupe_hash(source.name, title, city),
