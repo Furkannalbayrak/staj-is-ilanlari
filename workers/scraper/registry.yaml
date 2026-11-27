@@ -67,6 +67,9 @@ sources:
         - label: staj
           keywords: "staj"
           max_jobs: 120
+        - label: intern
+          keywords: "intern"
+          max_jobs: 100
 
   # 4) YOUTHALL (Türkiye Staj, Yeni Mezun ve İş İlanları - Logolu & Hızlı)
   - slug: youthall
