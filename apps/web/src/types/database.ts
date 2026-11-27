@@ -1,4 +1,13 @@
-export type SourcePlatform = "direct" | "linkedin" | "indeed" | "kariyernet" | "youthall";
+export type SourcePlatform =
+  | "direct"
+  | "linkedin"
+  | "indeed"
+  | "kariyernet"
+  | "youthall"
+  | "techcareer"
+  | "toptalent"
+  | "secretcv"
+  | "elemannet";
 export type WorkMode = "onsite" | "hybrid" | "remote" | "unknown";
 export type EmploymentType =
   | "full_time"
@@ -111,6 +120,10 @@ export const SOURCE_PLATFORM_LABELS: Record<SourcePlatform, string> = {
   direct: "Resmi Kariyer",
   linkedin: "LinkedIn",
   indeed: "Indeed",
-  kariyernet: "Kariyer.net",
   youthall: "Youthall",
+  techcareer: "Techcareer.net",
+  toptalent: "Toptalent",
+  secretcv: "Secretcv",
+  elemannet: "Eleman.net",
+  kariyernet: "Kariyer.net",
 };

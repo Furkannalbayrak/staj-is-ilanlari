@@ -43,6 +43,10 @@ const VALID_SOURCES = new Set<SourcePlatform>([
   "indeed",
   "kariyernet",
   "youthall",
+  "techcareer",
+  "toptalent",
+  "secretcv",
+  "elemannet",
 ]);
 
 /**

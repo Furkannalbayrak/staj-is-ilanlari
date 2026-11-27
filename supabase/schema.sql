@@ -44,7 +44,17 @@ create table if not exists public.jobs (
   company_name text not null,
   company_logo_url text,
   source_platform text not null check (
-    source_platform in ('direct', 'linkedin', 'indeed', 'kariyernet', 'youthall')
+    source_platform in (
+      'direct',
+      'linkedin',
+      'indeed',
+      'kariyernet',
+      'youthall',
+      'techcareer',
+      'toptalent',
+      'secretcv',
+      'elemannet'
+    )
   ),
   external_id text not null,
   dedupe_hash text not null,
