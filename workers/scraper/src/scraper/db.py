@@ -208,6 +208,22 @@ class Database:
         )
         return len(res.data or [])
 
+    def deactivate_stale_full_sync_portal_jobs(
+        self, source_platform: str, run_started_at: datetime
+    ) -> int:
+        """Tam liste taranan portallarda (ör. Youthall) siteden kalkan ilanları anında pasife çeker."""
+        cutoff = run_started_at.isoformat()
+        now_iso = datetime.now(timezone.utc).isoformat()
+        res = (
+            self.client.table("jobs")
+            .update({"is_active": False, "closed_at": now_iso})
+            .eq("source_platform", source_platform)
+            .eq("is_active", True)
+            .lt("last_seen_at", cutoff)
+            .execute()
+        )
+        return len(res.data or [])
+
     def log_scrape_run(self, result: ScrapeResult) -> None:
         self.client.table("scrape_runs").insert(
             {

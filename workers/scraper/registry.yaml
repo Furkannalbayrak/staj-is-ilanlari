@@ -76,7 +76,7 @@ sources:
     ats_type: portal
     adapter: portals.youthall
     careers_url: https://www.youthall.com/tr/is-ilanlari/
-    full_sync: false
+    full_sync: true
     config:
       site_name: youthall
       max_pages: 10

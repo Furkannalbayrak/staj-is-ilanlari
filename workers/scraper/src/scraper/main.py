@@ -95,8 +95,14 @@ def run_pipeline(
             all_new_jobs.extend(inserted_rows)
 
             deactivated_count = 0
-            if source.full_sync and company_id and len(jobs) > 0:
-                deactivated_count = db.deactivate_stale_corporate_jobs(company_id, started_at)
+            if source.full_sync and len(jobs) > 0:
+                if source.source_type == "corporate" and company_id:
+                    deactivated_count = db.deactivate_stale_corporate_jobs(company_id, started_at)
+                else:
+                    platform = source.config.get("site_name", source.slug)
+                    deactivated_count = db.deactivate_stale_full_sync_portal_jobs(
+                        platform, started_at
+                    )
             elif not source.full_sync:
                 platform = source.config.get("site_name", "linkedin")
                 deactivated_count = db.deactivate_stale_portal_jobs(platform, max_age_days=30)
