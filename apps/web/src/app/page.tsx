@@ -1,16 +1,28 @@
 import { createClient } from "@/lib/supabase/server";
 import { JobBoard } from "@/components/job-board";
-import type { Job } from "@/types/database";
+import { fetchAvailableCities, parseJobFilters, queryJobs } from "@/lib/jobs-query";
 
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
+interface HomePageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const resolvedParams = await searchParams;
+  const initialFilters = parseJobFilters(resolvedParams);
   const supabase = await createClient();
 
   if (!supabase) {
     return (
       <JobBoard
+        serverSide
         initialJobs={[]}
+        initialTotalCount={0}
+        initialPage={1}
+        initialTotalPages={1}
+        initialFilters={initialFilters}
+        availableCities={[]}
         initialSavedIds={[]}
         lastUpdatedAt={null}
         userId={null}
@@ -19,14 +31,9 @@ export default async function HomePage() {
     );
   }
 
-  const [{ data: jobsData }, { data: runData }, { data: authData }] = await Promise.all([
-    supabase
-      .from("jobs")
-      .select("*")
-      .eq("is_active", true)
-      .order("posted_at", { ascending: false, nullsFirst: false })
-      .order("first_seen_at", { ascending: false })
-      .limit(1000),
+  const [paginated, availableCities, { data: runData }, { data: authData }] = await Promise.all([
+    queryJobs(supabase, initialFilters),
+    fetchAvailableCities(supabase, initialFilters.city),
     supabase
       .from("scrape_runs")
       .select("finished_at")
@@ -50,7 +57,13 @@ export default async function HomePage() {
 
   return (
     <JobBoard
-      initialJobs={(jobsData as Job[]) || []}
+      serverSide
+      initialJobs={paginated.jobs}
+      initialTotalCount={paginated.totalCount}
+      initialPage={paginated.page}
+      initialTotalPages={paginated.totalPages}
+      initialFilters={{ ...initialFilters, page: paginated.page }}
+      availableCities={availableCities}
       initialSavedIds={savedIds}
       lastUpdatedAt={runData?.finished_at ?? null}
       userId={user?.id ?? null}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Bookmark,
   Building2,
@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Clock,
   Filter,
+  Loader2,
   MapPin,
   Search,
   SlidersHorizontal,
@@ -24,16 +25,36 @@ import {
   type SourcePlatform,
   type WorkMode,
 } from "@/types/database";
-import { cn, formatJobDateTr, formatRelativeTimeTr, hasSupabaseEnv } from "@/lib/utils";
+import {
+  buildJobSearchParams,
+  PAGE_SIZE,
+  type JobFilters,
+  type PaginatedJobsResult,
+} from "@/lib/jobs-query";
 import { expandQueryTerms, scoreJobSearchMatch } from "@/lib/search-synonyms";
+import { cn, formatJobDateTr, formatRelativeTimeTr, hasSupabaseEnv } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { JobDrawer } from "@/components/job-drawer";
 import { CompanyAvatar } from "@/components/company-avatar";
 
-const PAGE_SIZE = 50;
+const DEFAULT_FILTERS: JobFilters = {
+  q: "",
+  city: "all",
+  type: "all",
+  mode: "all",
+  category: "all",
+  source: "all",
+  page: 1,
+};
 
 interface JobBoardProps {
+  serverSide?: boolean;
   initialJobs: Job[];
+  initialTotalCount?: number;
+  initialPage?: number;
+  initialTotalPages?: number;
+  initialFilters?: JobFilters;
+  availableCities?: string[];
   initialSavedIds: string[];
   lastUpdatedAt: string | null;
   userId: string | null;
@@ -56,37 +77,151 @@ function formatCardLocation(city: string | null, location: string | null): strin
 }
 
 export function JobBoard({
+  serverSide = false,
   initialJobs,
+  initialTotalCount,
+  initialPage = 1,
+  initialTotalPages,
+  initialFilters = DEFAULT_FILTERS,
+  availableCities: availableCitiesProp,
   initialSavedIds,
   lastUpdatedAt,
   userId,
   emptyReason,
 }: JobBoardProps) {
-  const [jobs, setJobs] = useState<Job[]>(initialJobs);
-  const [search, setSearch] = useState("");
-  const [selectedCity, setSelectedCity] = useState<string>("all");
-  const [selectedEmployment, setSelectedEmployment] = useState<EmploymentType | "all">("all");
-  const [selectedWorkMode, setSelectedWorkMode] = useState<WorkMode | "all">("all");
-  const [selectedCategory, setSelectedCategory] = useState<JobCategory | "all">("all");
-  const [selectedSource, setSelectedSource] = useState<SourcePlatform | "all">("all");
+  const [serverJobs, setServerJobs] = useState<Job[]>(initialJobs);
+  const [serverTotalCount, setServerTotalCount] = useState<number>(
+    initialTotalCount ?? initialJobs.length
+  );
+  const [currentPage, setCurrentPage] = useState<number>(initialPage);
+  const [serverTotalPages, setServerTotalPages] = useState<number>(
+    initialTotalPages ?? Math.max(1, Math.ceil((initialTotalCount ?? initialJobs.length) / PAGE_SIZE))
+  );
+
+  const [searchInput, setSearchInput] = useState<string>(initialFilters.q);
+  const [debouncedSearch, setDebouncedSearch] = useState<string>(initialFilters.q);
+  const [selectedCity, setSelectedCity] = useState<string>(initialFilters.city);
+  const [selectedEmployment, setSelectedEmployment] = useState<EmploymentType | "all">(
+    initialFilters.type
+  );
+  const [selectedWorkMode, setSelectedWorkMode] = useState<WorkMode | "all">(
+    initialFilters.mode
+  );
+  const [selectedCategory, setSelectedCategory] = useState<JobCategory | "all">(
+    initialFilters.category
+  );
+  const [selectedSource, setSelectedSource] = useState<SourcePlatform | "all">(
+    initialFilters.source
+  );
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(() => new Set(initialSavedIds));
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+
+  const isFirstRender = useRef(true);
+  const abortRef = useRef<AbortController | null>(null);
 
   const availableCities = useMemo(() => {
+    if (availableCitiesProp) return availableCitiesProp;
     const set = new Set<string>();
-    for (const j of jobs) {
+    for (const j of initialJobs) {
       if (j.city) set.add(j.city);
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b, "tr"));
-  }, [jobs]);
+  }, [availableCitiesProp, initialJobs]);
 
-  const filteredJobs = useMemo(() => {
-    const expanded = expandQueryTerms(search);
+  // Arama kutusunu 280ms debounce et (sunucu taraflı modda her tuşta sorgu atmayı önler)
+  useEffect(() => {
+    if (searchInput === debouncedSearch) return;
+    if (!serverSide) {
+      setCurrentPage(1);
+      setDebouncedSearch(searchInput);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setCurrentPage(1);
+      setDebouncedSearch(searchInput);
+    }, 280);
+    return () => clearTimeout(timer);
+  }, [searchInput, debouncedSearch, serverSide]);
+
+  const fetchPage = useCallback(async (filters: JobFilters) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setIsLoading(true);
+    setFetchError(null);
+
+    const params = buildJobSearchParams(filters);
+    const qs = params.toString();
+    const nextUrl = qs ? `/?${qs}` : "/";
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", nextUrl);
+    }
+
+    try {
+      const res = await fetch(`/api/jobs${qs ? `?${qs}` : ""}`, {
+        signal: controller.signal,
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const data = (await res.json()) as PaginatedJobsResult;
+      setServerJobs(data.jobs);
+      setServerTotalCount(data.totalCount);
+      setServerTotalPages(data.totalPages);
+      setCurrentPage(data.page);
+    } catch (err) {
+      if ((err as Error).name === "AbortError") return;
+      setFetchError("İlanlar yüklenirken geçici bir bağlantı hatası oluştu.");
+    } finally {
+      if (abortRef.current === controller) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!serverSide) return;
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    if (emptyReason === "no_env") return;
+
+    fetchPage({
+      q: debouncedSearch,
+      city: selectedCity,
+      type: selectedEmployment,
+      mode: selectedWorkMode,
+      category: selectedCategory,
+      source: selectedSource,
+      page: currentPage,
+    });
+  }, [
+    serverSide,
+    debouncedSearch,
+    selectedCity,
+    selectedEmployment,
+    selectedWorkMode,
+    selectedCategory,
+    selectedSource,
+    currentPage,
+    emptyReason,
+    fetchPage,
+  ]);
+
+  // Client-side filtreleme (/saved sayfası için)
+  const clientFiltered = useMemo(() => {
+    if (serverSide) return [];
+    const expanded = expandQueryTerms(debouncedSearch);
     const matched: { job: Job; score: number }[] = [];
 
-    for (const job of jobs) {
+    for (const job of initialJobs) {
       if (selectedCity !== "all" && job.city !== selectedCity) continue;
       if (selectedEmployment !== "all" && job.employment_type !== selectedEmployment) continue;
       if (selectedWorkMode !== "all" && job.work_mode !== selectedWorkMode) continue;
@@ -109,11 +244,11 @@ export function JobBoard({
     if (expanded.exact) {
       matched.sort((a, b) => b.score - a.score);
     }
-
     return matched.map((m) => m.job);
   }, [
-    jobs,
-    search,
+    serverSide,
+    initialJobs,
+    debouncedSearch,
     selectedCity,
     selectedEmployment,
     selectedWorkMode,
@@ -121,27 +256,19 @@ export function JobBoard({
     selectedSource,
   ]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [
-    search,
-    selectedCity,
-    selectedEmployment,
-    selectedWorkMode,
-    selectedCategory,
-    selectedSource,
-  ]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / PAGE_SIZE));
-  const safePage = Math.min(currentPage, totalPages);
+  const totalCount = serverSide ? serverTotalCount : clientFiltered.length;
+  const totalPages = serverSide
+    ? serverTotalPages
+    : Math.max(1, Math.ceil(clientFiltered.length / PAGE_SIZE));
+  const safePage = Math.max(1, Math.min(currentPage, totalPages));
   const pageStart = (safePage - 1) * PAGE_SIZE;
-  const paginatedJobs = useMemo(
-    () => filteredJobs.slice(pageStart, pageStart + PAGE_SIZE),
-    [filteredJobs, pageStart]
-  );
+  const jobs = serverSide
+    ? serverJobs
+    : clientFiltered.slice(pageStart, pageStart + PAGE_SIZE);
 
   function goToPage(page: number) {
     const next = Math.max(1, Math.min(page, totalPages));
+    if (next === currentPage) return;
     setCurrentPage(next);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -152,16 +279,18 @@ export function JobBoard({
     selectedWorkMode !== "all",
     selectedCategory !== "all",
     selectedSource !== "all",
-    Boolean(search.trim()),
+    Boolean(searchInput.trim()),
   ].filter(Boolean).length;
 
   function clearFilters() {
-    setSearch("");
+    setSearchInput("");
+    setDebouncedSearch("");
     setSelectedCity("all");
     setSelectedEmployment("all");
     setSelectedWorkMode("all");
     setSelectedCategory("all");
     setSelectedSource("all");
+    setCurrentPage(1);
   }
 
   async function handleToggleSave(jobId: string) {
@@ -239,8 +368,8 @@ export function JobBoard({
           <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-zinc-400" />
           <input
             type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Pozisyon, şirket..."
             className="h-9 w-full rounded-md border border-zinc-200 bg-white pl-8 pr-3 text-sm text-zinc-950 placeholder:text-zinc-400 focus:border-blue-600 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-blue-500"
           />
@@ -259,7 +388,10 @@ export function JobBoard({
               <button
                 key={type}
                 type="button"
-                onClick={() => setSelectedEmployment(type)}
+                onClick={() => {
+                  setCurrentPage(1);
+                  setSelectedEmployment(type);
+                }}
                 className={cn(
                   "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
                   active
@@ -281,7 +413,10 @@ export function JobBoard({
         </label>
         <select
           value={selectedCity}
-          onChange={(e) => setSelectedCity(e.target.value)}
+          onChange={(e) => {
+            setCurrentPage(1);
+            setSelectedCity(e.target.value);
+          }}
           className="h-9 w-full rounded-md border border-zinc-200 bg-white px-2.5 text-sm text-zinc-900 focus:border-blue-600 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
         >
           <option value="all">Tüm Şehirler</option>
@@ -300,7 +435,10 @@ export function JobBoard({
         </label>
         <select
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value as JobCategory | "all")}
+          onChange={(e) => {
+            setCurrentPage(1);
+            setSelectedCategory(e.target.value as JobCategory | "all");
+          }}
           className="h-9 w-full rounded-md border border-zinc-200 bg-white px-2.5 text-sm text-zinc-900 focus:border-blue-600 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
         >
           <option value="all">Tüm Alanlar</option>
@@ -324,7 +462,10 @@ export function JobBoard({
               <button
                 key={mode}
                 type="button"
-                onClick={() => setSelectedWorkMode(mode)}
+                onClick={() => {
+                  setCurrentPage(1);
+                  setSelectedWorkMode(mode);
+                }}
                 className={cn(
                   "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
                   active
@@ -346,7 +487,10 @@ export function JobBoard({
         </label>
         <select
           value={selectedSource}
-          onChange={(e) => setSelectedSource(e.target.value as SourcePlatform | "all")}
+          onChange={(e) => {
+            setCurrentPage(1);
+            setSelectedSource(e.target.value as SourcePlatform | "all");
+          }}
           className="h-9 w-full rounded-md border border-zinc-200 bg-white px-2.5 text-sm text-zinc-900 focus:border-blue-600 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
         >
           <option value="all">Tüm Kaynaklar</option>
@@ -380,8 +524,9 @@ export function JobBoard({
               <h1 className="text-base font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
                 Aktif İlanlar
               </h1>
-              <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                {filteredJobs.length}
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                {isLoading && <Loader2 className="h-3 w-3 animate-spin text-blue-600" />}
+                {totalCount.toLocaleString("tr-TR")}
               </span>
             </div>
 
@@ -420,8 +565,32 @@ export function JobBoard({
             </div>
           )}
 
+          {/* Bağlantı Hatası Bandı */}
+          {fetchError && (
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+              <span>{fetchError}</span>
+              <button
+                type="button"
+                onClick={() =>
+                  fetchPage({
+                    q: debouncedSearch,
+                    city: selectedCity,
+                    type: selectedEmployment,
+                    mode: selectedWorkMode,
+                    category: selectedCategory,
+                    source: selectedSource,
+                    page: currentPage,
+                  })
+                }
+                className="shrink-0 font-semibold underline"
+              >
+                Tekrar Dene
+              </button>
+            </div>
+          )}
+
           {/* İlan Kartları (Tek Sütun, Hızlı Taranabilir) */}
-          {filteredJobs.length === 0 ? (
+          {jobs.length === 0 && !isLoading ? (
             <div className="rounded-xl border border-dashed border-zinc-300 px-6 py-14 text-center dark:border-zinc-800">
               {emptyReason === "no_env" ? (
                 <div className="mx-auto max-w-md space-y-2">
@@ -440,8 +609,7 @@ export function JobBoard({
                     Eşleşen ilan bulunamadı
                   </p>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    Filtreleri gevşetebilir veya Python scraper worker&apos;ını çalıştırarak
-                    veritabanını güncelleyebilirsiniz.
+                    Filtreleri gevşetebilir veya farklı bir anahtar kelime deneyebilirsiniz.
                   </p>
                   {activeFilterCount > 0 && (
                     <button
@@ -457,8 +625,13 @@ export function JobBoard({
             </div>
           ) : (
             <>
-              <div className="divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 bg-white dark:divide-zinc-800/80 dark:border-zinc-800 dark:bg-zinc-950">
-                {paginatedJobs.map((job) => {
+              <div
+                className={cn(
+                  "divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 bg-white transition-opacity dark:divide-zinc-800/80 dark:border-zinc-800 dark:bg-zinc-950",
+                  isLoading && "opacity-60"
+                )}
+              >
+                {jobs.map((job) => {
                   const isSaved = savedIds.has(job.id);
                   const isSelected = selectedJob?.id === job.id;
                   return (
@@ -586,18 +759,19 @@ export function JobBoard({
                 })}
               </div>
 
-              {/* Sayfalama (50 ilan / sayfa) */}
+              {/* Sunucu Taraflı Sayfalama (50 ilan / sayfa) */}
               {totalPages > 1 && (
                 <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                   <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    {pageStart + 1}–{Math.min(pageStart + PAGE_SIZE, filteredJobs.length)} /{" "}
-                    {filteredJobs.length} ilan
+                    {(pageStart + 1).toLocaleString("tr-TR")}–
+                    {Math.min(pageStart + PAGE_SIZE, totalCount).toLocaleString("tr-TR")} /{" "}
+                    {totalCount.toLocaleString("tr-TR")} ilan
                   </p>
 
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
-                      disabled={safePage <= 1}
+                      disabled={safePage <= 1 || isLoading}
                       onClick={() => goToPage(safePage - 1)}
                       className="inline-flex h-8 items-center gap-1 rounded-md border border-zinc-200 px-2.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100 disabled:pointer-events-none disabled:opacity-40 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
                     >
@@ -622,9 +796,10 @@ export function JobBoard({
                             )}
                             <button
                               type="button"
+                              disabled={isLoading}
                               onClick={() => goToPage(p)}
                               className={cn(
-                                "inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2 text-xs font-medium transition-colors",
+                                "inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2 text-xs font-medium transition-colors disabled:opacity-60",
                                 p === safePage
                                   ? "border-blue-700 bg-blue-700 text-white dark:border-blue-600 dark:bg-blue-600"
                                   : "border-zinc-200 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
@@ -638,7 +813,7 @@ export function JobBoard({
 
                     <button
                       type="button"
-                      disabled={safePage >= totalPages}
+                      disabled={safePage >= totalPages || isLoading}
                       onClick={() => goToPage(safePage + 1)}
                       className="inline-flex h-8 items-center gap-1 rounded-md border border-zinc-200 px-2.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100 disabled:pointer-events-none disabled:opacity-40 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
                     >
