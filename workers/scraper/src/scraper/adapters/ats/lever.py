@@ -82,7 +82,7 @@ class LeverAdapter(BaseAdapter):
                     apply_url=apply_url,
                     location=location or None,
                     city=city,
-                    work_mode=detect_work_mode(workplace, location, title),
+                    work_mode=detect_work_mode(workplace),
                     employment_type=detect_employment_type(title, commitment),
                     category=detect_category(title, department),
                     department=department,

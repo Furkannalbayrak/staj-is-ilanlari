@@ -73,6 +73,45 @@ sources:
       eu: true
       turkey_only: true
 
+  - slug: midas
+    name: Midas
+    enabled: true
+    source_type: corporate
+    ats_type: lever
+    adapter: ats.lever
+    careers_url: https://jobs.lever.co/getmidas
+    logo_url: https://www.google.com/s2/favicons?domain=getmidas.com&sz=128
+    full_sync: true
+    config:
+      board_token: getmidas
+      turkey_only: true
+
+  - slug: crytek-tr
+    name: Crytek
+    enabled: true
+    source_type: corporate
+    ats_type: lever
+    adapter: ats.lever
+    careers_url: https://jobs.lever.co/crytek
+    logo_url: https://www.google.com/s2/favicons?domain=crytek.com&sz=128
+    full_sync: true
+    config:
+      board_token: crytek
+      turkey_only: true
+
+  - slug: picus-security
+    name: Picus Security
+    enabled: true
+    source_type: corporate
+    ats_type: lever
+    adapter: ats.lever
+    careers_url: https://jobs.lever.co/picus
+    logo_url: https://www.google.com/s2/favicons?domain=picussecurity.com&sz=128
+    full_sync: true
+    config:
+      board_token: picus
+      turkey_only: true
+
   # ===========================================================================
   # 2) KURUMSAL ŞİRKETLER — GREENHOUSE ATS (Resmi JSON API, full_sync: true)
   # ===========================================================================
@@ -126,6 +165,71 @@ sources:
     full_sync: true
     config:
       board_token: binance
+      turkey_only: true
+
+  - slug: sezzle-tr
+    name: Sezzle
+    enabled: true
+    source_type: corporate
+    ats_type: greenhouse
+    adapter: ats.greenhouse
+    careers_url: https://boards.greenhouse.io/sezzle
+    logo_url: https://www.google.com/s2/favicons?domain=sezzle.com&sz=128
+    full_sync: true
+    config:
+      board_token: sezzle
+      turkey_only: true
+
+  - slug: medsien-tr
+    name: Medsien
+    enabled: true
+    source_type: corporate
+    ats_type: greenhouse
+    adapter: ats.greenhouse
+    careers_url: https://boards.greenhouse.io/medsien
+    logo_url: https://www.google.com/s2/favicons?domain=medsien.com&sz=128
+    full_sync: true
+    config:
+      board_token: medsien
+      turkey_only: true
+
+  - slug: zynga-tr
+    name: Zynga
+    enabled: true
+    source_type: corporate
+    ats_type: greenhouse
+    adapter: ats.greenhouse
+    careers_url: https://boards.greenhouse.io/zyngacareers
+    logo_url: https://www.google.com/s2/favicons?domain=zynga.com&sz=128
+    full_sync: true
+    config:
+      board_token: zyngacareers
+      turkey_only: true
+
+  - slug: tripledot-tr
+    name: Tripledot Studios
+    enabled: true
+    source_type: corporate
+    ats_type: greenhouse
+    adapter: ats.greenhouse
+    careers_url: https://boards.greenhouse.io/tripledotstudios
+    logo_url: https://www.google.com/s2/favicons?domain=tripledotstudios.com&sz=128
+    full_sync: true
+    config:
+      board_token: tripledotstudios
+      turkey_only: true
+
+  - slug: quince-tr
+    name: Quince
+    enabled: true
+    source_type: corporate
+    ats_type: greenhouse
+    adapter: ats.greenhouse
+    careers_url: https://boards.greenhouse.io/quince
+    logo_url: https://www.google.com/s2/favicons?domain=quince.com&sz=128
+    full_sync: true
+    config:
+      board_token: quince
       turkey_only: true
 
   # ===========================================================================
@@ -220,6 +324,71 @@ sources:
     full_sync: true
     config:
       company_identifier: Securitas
+      turkey_only: true
+
+  - slug: redbull-tr
+    name: Red Bull
+    enabled: true
+    source_type: corporate
+    ats_type: smartrecruiters
+    adapter: ats.smartrecruiters
+    careers_url: https://jobs.smartrecruiters.com/RedBull
+    logo_url: https://www.google.com/s2/favicons?domain=redbull.com&sz=128
+    full_sync: true
+    config:
+      company_identifier: RedBull
+      turkey_only: true
+
+  - slug: hm-tr
+    name: H&M
+    enabled: true
+    source_type: corporate
+    ats_type: smartrecruiters
+    adapter: ats.smartrecruiters
+    careers_url: https://jobs.smartrecruiters.com/HMGroup
+    logo_url: https://www.google.com/s2/favicons?domain=hm.com&sz=128
+    full_sync: true
+    config:
+      company_identifier: HMGroup
+      turkey_only: true
+
+  - slug: expeditors-tr
+    name: Expeditors
+    enabled: true
+    source_type: corporate
+    ats_type: smartrecruiters
+    adapter: ats.smartrecruiters
+    careers_url: https://jobs.smartrecruiters.com/Expeditors
+    logo_url: https://www.google.com/s2/favicons?domain=expeditors.com&sz=128
+    full_sync: true
+    config:
+      company_identifier: Expeditors
+      turkey_only: true
+
+  - slug: veolia-tr
+    name: Veolia
+    enabled: true
+    source_type: corporate
+    ats_type: smartrecruiters
+    adapter: ats.smartrecruiters
+    careers_url: https://jobs.smartrecruiters.com/VeoliaEnvironnementSA
+    logo_url: https://www.google.com/s2/favicons?domain=veolia.com&sz=128
+    full_sync: true
+    config:
+      company_identifier: VeoliaEnvironnementSA
+      turkey_only: true
+
+  - slug: psicro-tr
+    name: PSI CRO
+    enabled: true
+    source_type: corporate
+    ats_type: smartrecruiters
+    adapter: ats.smartrecruiters
+    careers_url: https://jobs.smartrecruiters.com/PSICRO
+    logo_url: https://www.google.com/s2/favicons?domain=psi-cro.com&sz=128
+    full_sync: true
+    config:
+      company_identifier: PSICRO
       turkey_only: true
 
   # ===========================================================================
@@ -450,6 +619,51 @@ sources:
       board: EXTERNAL_CAREERS
       turkey_only: true
 
+  - slug: spglobal-tr
+    name: S&P Global
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://spgi.wd5.myworkdayjobs.com/SPGI_Careers
+    logo_url: https://www.google.com/s2/favicons?domain=spglobal.com&sz=128
+    full_sync: true
+    config:
+      host: spgi.wd5.myworkdayjobs.com
+      tenant: spgi
+      board: SPGI_Careers
+      turkey_only: true
+
+  - slug: gilead-tr
+    name: Gilead Sciences
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://gilead.wd1.myworkdayjobs.com/gileadcareers
+    logo_url: https://www.google.com/s2/favicons?domain=gilead.com&sz=128
+    full_sync: true
+    config:
+      host: gilead.wd1.myworkdayjobs.com
+      tenant: gilead
+      board: gileadcareers
+      turkey_only: true
+
+  - slug: gevernova-tr
+    name: GE Vernova
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://gevernova.wd5.myworkdayjobs.com/Vernova_ExternalSite
+    logo_url: https://www.google.com/s2/favicons?domain=gevernova.com&sz=128
+    full_sync: true
+    config:
+      host: gevernova.wd5.myworkdayjobs.com
+      tenant: gevernova
+      board: Vernova_ExternalSite
+      turkey_only: true
+
   # ===========================================================================
   # 5) KURUMSAL ŞİRKETLER — ASHBY / WORKABLE ATS (Resmi JSON API, full_sync: true)
   # ===========================================================================
@@ -464,6 +678,110 @@ sources:
     full_sync: true
     config:
       board_token: codeway
+      turkey_only: true
+
+  - slug: bigger-games
+    name: Bigger Games
+    enabled: true
+    source_type: corporate
+    ats_type: custom
+    adapter: ats.ashby
+    careers_url: https://jobs.ashbyhq.com/biggergames
+    logo_url: https://www.google.com/s2/favicons?domain=biggergames.com&sz=128
+    full_sync: true
+    config:
+      board_token: biggergames
+      turkey_only: true
+
+  - slug: voodoo-tr
+    name: Voodoo
+    enabled: true
+    source_type: corporate
+    ats_type: custom
+    adapter: ats.ashby
+    careers_url: https://jobs.ashbyhq.com/voodoo
+    logo_url: https://www.google.com/s2/favicons?domain=voodoo.io&sz=128
+    full_sync: true
+    config:
+      board_token: voodoo
+      turkey_only: true
+
+  - slug: searchapi-tr
+    name: SearchApi
+    enabled: true
+    source_type: corporate
+    ats_type: custom
+    adapter: ats.ashby
+    careers_url: https://jobs.ashbyhq.com/searchapi
+    logo_url: https://www.google.com/s2/favicons?domain=searchapi.io&sz=128
+    full_sync: true
+    config:
+      board_token: searchapi
+      turkey_only: true
+
+  - slug: agave-games
+    name: Agave Games
+    enabled: true
+    source_type: corporate
+    ats_type: custom
+    adapter: ats.ashby
+    careers_url: https://jobs.ashbyhq.com/agavegames
+    logo_url: https://www.google.com/s2/favicons?domain=agavegames.com&sz=128
+    full_sync: true
+    config:
+      board_token: agavegames
+      turkey_only: true
+
+  - slug: fal-ai-tr
+    name: fal.ai
+    enabled: true
+    source_type: corporate
+    ats_type: custom
+    adapter: ats.ashby
+    careers_url: https://jobs.ashbyhq.com/fal-ai
+    logo_url: https://www.google.com/s2/favicons?domain=fal.ai&sz=128
+    full_sync: true
+    config:
+      board_token: fal-ai
+      turkey_only: true
+
+  - slug: docplanner-tr
+    name: Docplanner (DoktorTakvimi)
+    enabled: true
+    source_type: corporate
+    ats_type: custom
+    adapter: ats.ashby
+    careers_url: https://jobs.ashbyhq.com/docplanner
+    logo_url: https://www.google.com/s2/favicons?domain=doktortakvimi.com&sz=128
+    full_sync: true
+    config:
+      board_token: docplanner
+      turkey_only: true
+
+  - slug: cambly-tr
+    name: Cambly
+    enabled: true
+    source_type: corporate
+    ats_type: custom
+    adapter: ats.ashby
+    careers_url: https://jobs.ashbyhq.com/cambly
+    logo_url: https://www.google.com/s2/favicons?domain=cambly.com&sz=128
+    full_sync: true
+    config:
+      board_token: cambly
+      turkey_only: true
+
+  - slug: elevenlabs-tr
+    name: ElevenLabs
+    enabled: true
+    source_type: corporate
+    ats_type: custom
+    adapter: ats.ashby
+    careers_url: https://jobs.ashbyhq.com/elevenlabs
+    logo_url: https://www.google.com/s2/favicons?domain=elevenlabs.io&sz=128
+    full_sync: true
+    config:
+      board_token: elevenlabs
       turkey_only: true
 
   # ===========================================================================
@@ -512,15 +830,24 @@ sources:
       delay_max_sec: 3.8
       max_429_retries: 2
       queries:
-        - label: tum-sektorler
+        - label: uzaktan
           keywords: ""
-          max_jobs: 250
+          f_WT: "2"
+          max_jobs: 90
+        - label: hibrit
+          keywords: ""
+          f_WT: "3"
+          max_jobs: 90
+        - label: ofis
+          keywords: ""
+          f_WT: "1"
+          max_jobs: 100
         - label: staj
           keywords: "staj"
-          max_jobs: 120
+          max_jobs: 100
         - label: intern
           keywords: "intern"
-          max_jobs: 100
+          max_jobs: 80
 
   - slug: youthall
     name: Youthall

@@ -75,7 +75,7 @@ class GreenhouseAdapter(BaseAdapter):
                     apply_url=apply_url,
                     location=location or None,
                     city=city,
-                    work_mode=detect_work_mode(location, title),
+                    work_mode="unknown",
                     employment_type=detect_employment_type(title, department),
                     category=detect_category(title, department),
                     department=department,

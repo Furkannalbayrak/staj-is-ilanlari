@@ -86,11 +86,8 @@ class AshbyAdapter(BaseAdapter):
 
             raw_wp = str(item.get("workplaceType") or "").lower().replace("-", "").replace("_", "")
             work_mode: WorkMode = _ASHBY_WORKPLACE_MAP.get(raw_wp, "unknown")
-            if work_mode == "unknown":
-                if item.get("isRemote") is True:
-                    work_mode = "remote"
-                else:
-                    work_mode = detect_work_mode(all_locs_str, title)
+            if work_mode == "unknown" and item.get("isRemote") is True:
+                work_mode = "remote"
 
             raw_emp = str(item.get("employmentType") or "").lower().replace("-", "").replace("_", "")
             emp_type = detect_employment_type(title)

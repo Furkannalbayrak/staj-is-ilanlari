@@ -122,7 +122,7 @@ class TechcareerAdapter(BaseAdapter):
                     else normalize_city(loc_raw)
                 )
                 work_places = " ".join(str(w) for w in (item.get("workPlaces") or []))
-                work_mode = detect_work_mode(work_places, loc_raw, title)
+                work_mode = detect_work_mode(work_places)
                 emp_type = detect_employment_type(title)
                 posted_at = None
                 description = None
@@ -152,7 +152,7 @@ class TechcareerAdapter(BaseAdapter):
                                 emp_type = detect_employment_type(title, type_of_works)
                             if head.get("workPlaces") and work_mode == "unknown":
                                 work_mode = detect_work_mode(
-                                    " ".join(str(w) for w in head["workPlaces"]), title
+                                    " ".join(str(w) for w in head["workPlaces"])
                                 )
 
                             raw_start = head.get("startDate")

@@ -168,7 +168,7 @@ class WorkdayAdapter(BaseAdapter):
                         apply_url=apply_url,
                         location=city or loc_text or None,
                         city=city,
-                        work_mode=detect_work_mode(remote_type, loc_text, title),
+                        work_mode=detect_work_mode(remote_type),
                         employment_type=detect_employment_type(title, time_type),
                         category=detect_category(title),
                         department=None,

@@ -396,7 +396,8 @@ class LinkedInGuestAdapter(BaseAdapter):
                     posted_at = _parse_relative_time(time_text, time_dt_attr)
                     city = normalize_city(loc_str)
 
-                    work_mode = forced_work_mode or detect_work_mode(loc_str, title)
+                    # Yalnızca LinkedIn'in resmi f_WT filtresinden gelen gerçek çalışma modelini kullan
+                    work_mode: WorkMode = forced_work_mode or "unknown"
                     detected_emp = detect_employment_type(title)
                     if forced_emp_type == "internship" or detected_emp == "internship":
                         emp_type: EmploymentType = "internship"

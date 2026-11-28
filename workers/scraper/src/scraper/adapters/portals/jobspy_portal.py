@@ -119,7 +119,7 @@ class JobSpyPortalAdapter(BaseAdapter):
                 city = normalize_city(loc_str)
                 company_logo_url = _clean_str(row.get("company_logo"))
                 is_remote = bool(row.get("is_remote")) if row.get("is_remote") is not None else False
-                work_mode = "remote" if is_remote else detect_work_mode(loc_str, title)
+                work_mode = "remote" if is_remote else "unknown"
                 job_type = _clean_str(row.get("job_type"))
                 description = _clean_str(row.get("description"))
 

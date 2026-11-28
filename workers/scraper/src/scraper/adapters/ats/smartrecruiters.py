@@ -24,14 +24,14 @@ logger = logging.getLogger(__name__)
 BASE_API = "https://api.smartrecruiters.com/v1/companies"
 
 
-def _parse_work_mode(loc_obj: dict[str, Any], title: str) -> WorkMode:
+def _parse_work_mode(loc_obj: dict[str, Any]) -> WorkMode:
     if loc_obj.get("hybrid") is True:
         return "hybrid"
     if loc_obj.get("remote") is True:
         return "remote"
     if loc_obj.get("remote") is False and loc_obj.get("hybrid") is False:
         return "onsite"
-    return detect_work_mode(loc_obj.get("fullLocation"), title)
+    return "unknown"
 
 
 def _build_description(detail: dict[str, Any]) -> str | None:
@@ -107,7 +107,7 @@ class SmartRecruitersAdapter(BaseAdapter):
                     continue
 
                 city = normalize_city(raw_city) or normalize_city(full_loc)
-                work_mode = _parse_work_mode(loc_obj, title)
+                work_mode = _parse_work_mode(loc_obj)
 
                 emp_label = (item.get("typeOfEmployment") or {}).get("label") or ""
                 exp_label = (item.get("experienceLevel") or {}).get("label") or ""

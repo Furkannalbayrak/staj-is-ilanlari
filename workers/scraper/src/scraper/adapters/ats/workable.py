@@ -74,11 +74,8 @@ class WorkableAdapter(BaseAdapter):
                 city = normalize_city(loc_obj.get("city")) or normalize_city(loc_str)
                 wp_raw = str(item.get("workplace") or "").lower()
                 work_mode: WorkMode = _WORKABLE_WORKPLACE.get(wp_raw, "unknown")
-                if work_mode == "unknown":
-                    if item.get("remote") is True:
-                        work_mode = "remote"
-                    else:
-                        work_mode = detect_work_mode(loc_str, title)
+                if work_mode == "unknown" and item.get("remote") is True:
+                    work_mode = "remote"
 
                 emp_type = detect_employment_type(title, item.get("type"))
                 departments = item.get("department") or []

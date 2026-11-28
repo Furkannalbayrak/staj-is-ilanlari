@@ -243,7 +243,7 @@ class SecretcvAdapter(BaseAdapter):
                     work_mode: WorkMode = (
                         "remote"
                         if "TELECOMMUTE" in loc_type
-                        else detect_work_mode(title, emp_str)
+                        else "unknown"
                     )
 
                     posted_at = None

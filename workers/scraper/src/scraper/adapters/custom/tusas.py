@@ -80,7 +80,7 @@ class TusasAdapter(BaseAdapter):
 
                 city = normalize_city(header_text) or normalize_city(title)
                 emp_type = detect_employment_type(title, header_text)
-                work_mode = detect_work_mode(header_text, title)
+                work_mode = "unknown"
 
                 # Sayfa gövdesindeki açıklama bloklarını topla
                 body_parts: list[str] = []
