@@ -176,20 +176,11 @@ export function JobBoard({
     return Array.from(set).sort((a, b) => a.localeCompare(b, "tr"));
   }, [availableCitiesProp, initialJobs]);
 
-  // Arama kutusunu 280ms debounce et (sunucu taraflı modda her tuşta sorgu atmayı önler)
-  useEffect(() => {
-    if (searchInput === debouncedSearch) return;
-    if (!serverSide) {
-      setCurrentPage(1);
-      setDebouncedSearch(searchInput);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setCurrentPage(1);
-      setDebouncedSearch(searchInput);
-    }, 280);
-    return () => clearTimeout(timer);
-  }, [searchInput, debouncedSearch, serverSide]);
+  function handleSearchSubmit(e?: React.FormEvent) {
+    e?.preventDefault();
+    setCurrentPage(1);
+    setDebouncedSearch(searchInput.trim());
+  }
 
   const fetchPage = useCallback(async (filters: JobFilters) => {
     abortRef.current?.abort();
@@ -410,31 +401,46 @@ export function JobBoard({
         <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Anahtar Kelime
         </label>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Pozisyon, şirket..."
-            className={cn(
-              "h-8.5 w-full rounded-lg border pl-8 pr-7 text-xs transition-all placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/15 dark:focus:border-blue-500 dark:focus:bg-slate-900",
-              searchInput.trim()
-                ? "border-blue-300 bg-blue-50/30 font-medium text-slate-900 dark:border-blue-700 dark:bg-blue-950/30 dark:text-slate-50"
-                : "border-slate-200 bg-slate-50/80 text-slate-900 hover:border-slate-300 dark:border-slate-700/80 dark:bg-slate-800/70 dark:text-slate-50"
+        <form onSubmit={handleSearchSubmit} className="flex items-center gap-1.5">
+          <div className="relative min-w-0 flex-1">
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Pozisyon, şirket..."
+              className={cn(
+                "h-8.5 w-full rounded-lg border pl-2.5 pr-7 text-xs transition-all placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/15 dark:focus:border-blue-500 dark:focus:bg-slate-900",
+                debouncedSearch.trim()
+                  ? "border-blue-300 bg-blue-50/30 font-medium text-slate-900 dark:border-blue-700 dark:bg-blue-950/30 dark:text-slate-50"
+                  : "border-slate-200 bg-slate-50/80 text-slate-900 hover:border-slate-300 dark:border-slate-700/80 dark:bg-slate-800/70 dark:text-slate-50"
+              )}
+            />
+            {searchInput && (
+              <button
+                type="button"
+                aria-label="Aramayı temizle"
+                onClick={() => {
+                  setSearchInput("");
+                  if (debouncedSearch !== "") {
+                    setCurrentPage(1);
+                    setDebouncedSearch("");
+                  }
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:bg-slate-200/70 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+              >
+                <X className="h-3 w-3" />
+              </button>
             )}
-          />
-          {searchInput && (
-            <button
-              type="button"
-              aria-label="Aramayı temizle"
-              onClick={() => setSearchInput("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:bg-slate-200/70 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          )}
-        </div>
+          </div>
+          <button
+            type="submit"
+            aria-label="Ara"
+            title="Ara"
+            className="inline-flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-lg bg-blue-700 text-white shadow-xs transition-all hover:bg-blue-800 active:scale-[0.97] dark:bg-blue-600 dark:hover:bg-blue-500"
+          >
+            <Search className="h-3.5 w-3.5" />
+          </button>
+        </form>
       </div>
 
       {/* Çalışma Tipi (Hızlı Pill'ler) */}
