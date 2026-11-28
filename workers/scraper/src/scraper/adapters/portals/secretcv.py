@@ -46,6 +46,43 @@ def _parse_jobposting_jsonld(html: str) -> dict[str, Any] | None:
     return None
 
 
+def _extract_description_from_html(html: str) -> str | None:
+    """
+    Secretcv'nin JSON-LD description alanı tüm HTML'i silip tek düz paragraf veriyor.
+    Gerçek sayfadaki <div class="cv-card content-job"> içindeki başlıkları, paragrafları
+    ve <ul><li> madde işaretlerini koruyarak okunaklı Markdown açıklaması üretir.
+    """
+    tree = LexborHTMLParser(html)
+    for box in tree.css("div.cv-card.content-job"):
+        classes = (box.attributes.get("class") or "").lower()
+        if "map-container" in classes:
+            continue
+        if not box.css_first("h2.cj-title") and not box.css_first("span.cj-title"):
+            continue
+        raw_box = box.html or ""
+        if not raw_box:
+            continue
+        # Üstteki tekrar eden ilan başlığını (<h2 class="cj-title">) kaldır
+        raw_box = re.sub(
+            r'<h2[^>]*class="[^"]*cj-title[^"]*"[^>]*>[\s\S]*?</h2>',
+            "",
+            raw_box,
+            count=1,
+            flags=re.IGNORECASE,
+        )
+        # Bölüm başlıklarını (<span class="cj-title...">) <h3>'e çevir ki strip_html '### Başlık' yapsın
+        raw_box = re.sub(
+            r'<span[^>]*class="[^"]*cj-title[^"]*"[^>]*>([\s\S]*?)</span>',
+            r"<h3>\1</h3>",
+            raw_box,
+            flags=re.IGNORECASE,
+        )
+        cleaned = strip_html(raw_box)
+        if cleaned and len(cleaned) >= 40:
+            return cleaned
+    return None
+
+
 def _extract_logo_from_html(html: str) -> str | None:
     tree = LexborHTMLParser(html)
     for sel in ("img.company-logo", ".company-logo img", "img[src*='logo']", "img[src*='firma']"):
@@ -215,7 +252,9 @@ class SecretcvAdapter(BaseAdapter):
                         except ValueError:
                             posted_at = None
 
-                    description = strip_html(jp.get("description"))
+                    description = _extract_description_from_html(dr.text) or strip_html(
+                        jp.get("description")
+                    )
 
                     jobs.append(
                         JobPayload(

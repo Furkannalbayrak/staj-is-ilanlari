@@ -136,10 +136,10 @@ class TechcareerAdapter(BaseAdapter):
                         det_resp = session.get(apply_url, headers=headers, timeout=15)
                         if det_resp.status_code == 200 and det_resp.text:
                             det_nd = _extract_next_data(det_resp.text)
+                            det_pp = ((det_nd or {}).get("props") or {}).get("pageProps") or {}
                             det_obj = (
-                                ((det_nd or {}).get("props") or {})
-                                .get("pageProps", {})
-                                .get("initialJobDetail")
+                                det_pp.get("jobDetail")
+                                or det_pp.get("initialJobDetail")
                                 or {}
                             )
                             head = det_obj.get("head") or {}

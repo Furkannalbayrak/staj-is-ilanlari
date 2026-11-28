@@ -307,7 +307,11 @@ def strip_html(html: str | None) -> str | None:
         return None
     import html as html_lib
 
-    text = re.sub(r"<(script|style)[^>]*>[\s\S]*?</\1>", "", html, flags=re.IGNORECASE)
+    # Eleman.net gibi JSON-LD içinde HTML etiketlerini kaçışlı (&lt;br /&gt;) veren kaynakları önce çöz
+    raw_html = html_lib.unescape(html) if "&lt;" in html else html
+
+    text = re.sub(r"<(script|style)[^>]*>[\s\S]*?</\1>", "", raw_html, flags=re.IGNORECASE)
+    text = re.sub(r"<!--[\s\S]*?-->", "", text)
     # 1) Blok ve satır sonlarını ÖNCE dönüştür
     text = re.sub(r"<br\s*/?>", "\n", text, flags=re.IGNORECASE)
     text = re.sub(r"<li[^>]*>", "\n- ", text, flags=re.IGNORECASE)
