@@ -146,9 +146,9 @@ def detect_work_mode(*texts: str | None) -> WorkMode:
     combined = " ".join(fold_tr(t) for t in texts if t)
     if any(k in combined for k in ("hybrid", "hibrit")):
         return "hybrid"
-    if any(k in combined for k in ("remote", "uzaktan", "evden", "work from home", "online")):
+    if any(k in combined for k in ("remote", "uzaktan", "evden", "work from home")):
         return "remote"
-    if any(k in combined for k in ("onsite", "on site", "yerinde", "ofisten", "ofis")):
+    if any(k in combined for k in ("onsite", "on site", "is yerinde", "yerinde", "ofisten")):
         return "onsite"
     return "unknown"
 

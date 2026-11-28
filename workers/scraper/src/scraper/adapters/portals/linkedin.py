@@ -423,8 +423,6 @@ class LinkedInGuestAdapter(BaseAdapter):
                     job.employment_type = real_emp
             if desc:
                 job.description = desc
-                if job.work_mode == "unknown":
-                    job.work_mode = detect_work_mode(desc)
             enriched += 1
             if ext_id not in existing:
                 enriched_new += 1
