@@ -523,6 +523,10 @@ sources:
           keywords: ""
           f_WT: "3"
           max_jobs: 40
+        - label: ofis
+          keywords: ""
+          f_WT: "1"
+          max_jobs: 40
         - label: staj
           keywords: "staj"
           max_jobs: 120

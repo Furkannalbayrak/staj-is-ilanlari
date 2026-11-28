@@ -222,10 +222,6 @@ def heal_recent_unenriched_linkedin_jobs(db_client: Any, max_items: int = 15) ->
         patch: dict[str, Any] = {}
         if desc and not row.get("description"):
             patch["description"] = desc
-            if row.get("work_mode") == "unknown":
-                wm = detect_work_mode_from_description(desc)
-                if wm != "unknown":
-                    patch["work_mode"] = wm
         if real_emp and (row.get("employment_type") == "unknown" or real_emp == "internship"):
             patch["employment_type"] = real_emp
         if sched and sched != "Staj" and not row.get("work_schedule"):
@@ -489,8 +485,6 @@ class LinkedInGuestAdapter(BaseAdapter):
                     job.employment_type = real_emp
             if desc:
                 job.description = desc
-                if job.work_mode == "unknown":
-                    job.work_mode = detect_work_mode_from_description(desc)
             enriched += 1
             if ext_id not in existing:
                 enriched_new += 1
