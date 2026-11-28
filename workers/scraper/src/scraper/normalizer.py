@@ -200,8 +200,6 @@ def detect_employment_type(*texts: str | None) -> EmploymentType:
     combined = " ".join(fold_tr(t) for t in texts if t)
     if any(k in combined for k in ("staj", "stajyer", "intern", "internship", "aday muhendis", "long term")):
         return "internship"
-    if any(k in combined for k in ("yeni mezun", "new grad", "graduate program", "mt program", "management trainee")):
-        return "new_grad"
     if any(k in combined for k in ("part time", "parttime", "yari zamanli")):
         return "part_time"
     if any(k in combined for k in ("sozlesmeli", "contract", "freelance", "proje bazli")):

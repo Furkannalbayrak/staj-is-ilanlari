@@ -449,7 +449,7 @@ export function JobBoard({
           İlan Türü
         </label>
         <div className="flex flex-wrap gap-1.5">
-          {(["all", "internship", "new_grad", "full_time", "part_time", "contract"] as const).map((type) => {
+          {(["all", "internship", "full_time", "part_time", "contract"] as const).map((type) => {
             const active = selectedEmployment === type;
             return (
               <button
@@ -770,15 +770,9 @@ export function JobBoard({
                               </span>
                             )}
                             {job.employment_type !== "unknown" &&
-                              job.employment_type !== "internship" && (
-                                <span
-                                  className={cn(
-                                    "rounded-md border px-2 py-0.5 font-medium",
-                                    job.employment_type === "new_grad"
-                                      ? "border-cyan-200/80 bg-cyan-50 text-cyan-800 dark:border-cyan-800/60 dark:bg-cyan-950/50 dark:text-cyan-300"
-                                      : "border-slate-200/80 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300"
-                                  )}
-                                >
+                              job.employment_type !== "internship" &&
+                              job.employment_type !== "new_grad" && (
+                                <span className="rounded-md border border-slate-200/80 bg-slate-50 px-2 py-0.5 font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300">
                                   {EMPLOYMENT_TYPE_LABELS[job.employment_type]}
                                 </span>
                               )}
