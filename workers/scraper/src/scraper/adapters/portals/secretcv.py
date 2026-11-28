@@ -78,6 +78,13 @@ def _extract_description_from_html(html: str) -> str | None:
             flags=re.IGNORECASE,
         )
         cleaned = strip_html(raw_box)
+        if cleaned:
+            cleaned = re.sub(
+                r"\n+(?:İşe Başvur\s*\n+veya\s*\n+CV Oluştur(?:\s*\n+İlanı Şikayet Et)?|İlanı Şikayet Et)\s*$",
+                "",
+                cleaned,
+                flags=re.IGNORECASE,
+            ).strip()
         if cleaned and len(cleaned) >= 40:
             return cleaned
     return None
