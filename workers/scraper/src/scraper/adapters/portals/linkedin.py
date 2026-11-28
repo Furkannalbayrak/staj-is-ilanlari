@@ -85,8 +85,17 @@ def _fetch_linkedin_detail(
                     real_emp_type = _SCHEDULE_TO_EMP.get(val)
                     break
 
-            desc_node = tree.css_first(".show-more-less-html__markup, .description__text")
+            desc_node = tree.css_first(".show-more-less-html__markup") or tree.css_first(
+                ".description__text"
+            )
             description = strip_html(desc_node.html) if desc_node and desc_node.html else None
+            if description:
+                description = re.sub(
+                    r"(?:\n+(?:Show more|Show less|Daha fazla göster|Daha az göster))+\s*$",
+                    "",
+                    description,
+                    flags=re.IGNORECASE,
+                ).strip() or None
             return work_schedule, real_emp_type, description
         except Exception:
             if attempt == max_retries - 1:
