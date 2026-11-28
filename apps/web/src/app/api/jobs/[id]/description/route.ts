@@ -123,18 +123,6 @@ function extractLinkedInMeta(html: string, description: string | null): LinkedIn
     meta.applicants = appMatch[1].replace(/applicants/i, "başvuru").trim();
   }
 
-  // Açıklama metninde açıkça geçiyorsa çalışma modelini tespit et
-  if (description) {
-    const low = description.toLocaleLowerCase("tr-TR");
-    if (/\b(hibrit|hybrid)\b/.test(low)) {
-      meta.workMode = "Hibrit";
-    } else if (/\b(uzaktan|remote|evden çalışma|work from home)\b/.test(low)) {
-      meta.workMode = "Uzaktan";
-    } else if (/\b(ofisten|yerinde çalışma|on-site|onsite)\b/.test(low)) {
-      meta.workMode = "Ofis / Yerinde";
-    }
-  }
-
   return meta;
 }
 
