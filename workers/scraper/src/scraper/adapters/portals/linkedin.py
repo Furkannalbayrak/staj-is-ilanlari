@@ -32,17 +32,28 @@ IMPERSONATIONS = ["chrome124", "chrome120", "chrome116", "safari17_0"]
 
 _SCHEDULE_TR_MAP: dict[str, str] = {
     "full-time": "Tam Zamanlı",
+    "tam zamanlı": "Tam Zamanlı",
     "part-time": "Yarı Zamanlı",
+    "yarı zamanlı": "Yarı Zamanlı",
     "internship": "Staj",
+    "staj": "Staj",
+    "stajyer": "Staj",
     "contract": "Sözleşmeli",
+    "sözleşmeli": "Sözleşmeli",
     "temporary": "Geçici",
+    "geçici": "Geçici",
 }
 
 _SCHEDULE_TO_EMP: dict[str, EmploymentType] = {
     "full-time": "full_time",
+    "tam zamanlı": "full_time",
     "part-time": "part_time",
+    "yarı zamanlı": "part_time",
     "internship": "internship",
+    "staj": "internship",
+    "stajyer": "internship",
     "contract": "contract",
+    "sözleşmeli": "contract",
 }
 
 
@@ -74,6 +85,7 @@ def _fetch_linkedin_detail(
             tree = LexborHTMLParser(resp.text)
             work_schedule = None
             real_emp_type: EmploymentType | None = None
+            is_seniority_internship = False
             for li in tree.css("li.description__job-criteria-item"):
                 h3 = li.css_first("h3")
                 sp = li.css_first("span")
@@ -84,7 +96,11 @@ def _fetch_linkedin_detail(
                 if "employment" in label or "istihdam" in label:
                     work_schedule = _SCHEDULE_TR_MAP.get(val, sp.text(strip=True))
                     real_emp_type = _SCHEDULE_TO_EMP.get(val)
-                    break
+                elif ("seniority" in label or "kıdem" in label) and val in ("internship", "staj", "stajyer"):
+                    is_seniority_internship = True
+
+            if is_seniority_internship:
+                real_emp_type = "internship"
 
             desc_node = tree.css_first(".show-more-less-html__markup") or tree.css_first(
                 ".description__text"
@@ -171,6 +187,55 @@ def _extract_job_id(card, href: str) -> str | None:
     if m3:
         return f"li-{m3.group(1)}"
     return None
+
+
+def heal_recent_unenriched_linkedin_jobs(db_client: Any, max_items: int = 15) -> int:
+    """
+    Son 72 saatte eklenmiş ama o anki 429 nedeniyle açıklaması veya çalışma türü
+    eksik kalmış LinkedIn ilanlarını doğrudan ID'leriyle tamamlar (arama listesinde
+    aşağı düşmüş olsalar bile yakalar).
+    """
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=72)).isoformat()
+    res = (
+        db_client.table("jobs")
+        .select("id,external_id,description,employment_type,work_mode,work_schedule")
+        .eq("source_platform", "linkedin")
+        .eq("is_active", True)
+        .gte("first_seen_at", cutoff)
+        .or_("description.is.null,employment_type.eq.unknown")
+        .order("first_seen_at", desc=True)
+        .limit(max_items)
+        .execute()
+    )
+    rows = res.data or []
+    if not rows:
+        return 0
+
+    session = cf_requests.Session(impersonate=IMPERSONATIONS[0])
+    healed = 0
+    for row in rows:
+        numeric_id = str(row.get("external_id") or "").replace("li-", "").strip()
+        if not numeric_id.isdigit():
+            continue
+        time.sleep(random.uniform(0.5, 0.9))
+        sched, real_emp, desc = _fetch_linkedin_detail(session, numeric_id, max_retries=3)
+        patch: dict[str, Any] = {}
+        if desc and not row.get("description"):
+            patch["description"] = desc
+            if row.get("work_mode") == "unknown":
+                wm = detect_work_mode_from_description(desc)
+                if wm != "unknown":
+                    patch["work_mode"] = wm
+        if real_emp and (row.get("employment_type") == "unknown" or real_emp == "internship"):
+            patch["employment_type"] = real_emp
+        if sched and sched != "Staj" and not row.get("work_schedule"):
+            patch["work_schedule"] = sched
+        if patch:
+            db_client.table("jobs").update(patch).eq("id", row["id"]).execute()
+            healed += 1
+    if healed:
+        logger.info("[linkedin] Self-healing: %d/%d eksik LinkedIn ilanı tamamlandı.", healed, len(rows))
+    return healed
 
 
 class LinkedInGuestAdapter(BaseAdapter):

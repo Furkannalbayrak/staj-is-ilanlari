@@ -133,6 +133,12 @@ def run_pipeline(
             elif not source.full_sync:
                 platform = source.config.get("site_name", "linkedin")
                 deactivated_count = db.deactivate_stale_portal_jobs(platform, max_age_days=30)
+                if platform == "linkedin":
+                    from scraper.adapters.portals.linkedin import (
+                        heal_recent_unenriched_linkedin_jobs,
+                    )
+
+                    heal_recent_unenriched_linkedin_jobs(db.client, max_items=15)
 
             finished_at = datetime.now(timezone.utc)
             result = ScrapeResult(
