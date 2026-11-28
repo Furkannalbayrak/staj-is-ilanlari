@@ -300,6 +300,156 @@ sources:
       board: "2"
       turkey_only: true
 
+  - slug: abb-tr
+    name: ABB
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://abb.wd3.myworkdayjobs.com/External_Career_Page
+    logo_url: https://www.google.com/s2/favicons?domain=abb.com&sz=128
+    full_sync: true
+    config:
+      host: abb.wd3.myworkdayjobs.com
+      tenant: abb
+      board: External_Career_Page
+      turkey_only: true
+
+  - slug: astrazeneca-tr
+    name: AstraZeneca
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://astrazeneca.wd3.myworkdayjobs.com/Careers
+    logo_url: https://www.google.com/s2/favicons?domain=astrazeneca.com&sz=128
+    full_sync: true
+    config:
+      host: astrazeneca.wd3.myworkdayjobs.com
+      tenant: astrazeneca
+      board: Careers
+      turkey_only: true
+
+  - slug: abbott-tr
+    name: Abbott
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://abbott.wd5.myworkdayjobs.com/abbottcareers
+    logo_url: https://www.google.com/s2/favicons?domain=abbott.com&sz=128
+    full_sync: true
+    config:
+      host: abbott.wd5.myworkdayjobs.com
+      tenant: abbott
+      board: abbottcareers
+      turkey_only: true
+
+  - slug: philips-tr
+    name: Philips
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://philips.wd3.myworkdayjobs.com/jobs-and-careers
+    logo_url: https://www.google.com/s2/favicons?domain=philips.com&sz=128
+    full_sync: true
+    config:
+      host: philips.wd3.myworkdayjobs.com
+      tenant: philips
+      board: jobs-and-careers
+      turkey_only: true
+
+  - slug: shell-tr
+    name: Shell
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://shell.wd3.myworkdayjobs.com/ShellCareers
+    logo_url: https://www.google.com/s2/favicons?domain=shell.com&sz=128
+    full_sync: true
+    config:
+      host: shell.wd3.myworkdayjobs.com
+      tenant: shell
+      board: ShellCareers
+      turkey_only: true
+
+  - slug: cisco-tr
+    name: Cisco
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://cisco.wd5.myworkdayjobs.com/Cisco_Careers
+    logo_url: https://www.google.com/s2/favicons?domain=cisco.com&sz=128
+    full_sync: true
+    config:
+      host: cisco.wd5.myworkdayjobs.com
+      tenant: cisco
+      board: Cisco_Careers
+      turkey_only: true
+
+  - slug: unilever-tr
+    name: Unilever
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://unilever.wd3.myworkdayjobs.com/Unilever_Experienced_Professionals
+    logo_url: https://www.google.com/s2/favicons?domain=unilever.com&sz=128
+    full_sync: true
+    config:
+      host: unilever.wd3.myworkdayjobs.com
+      tenant: unilever
+      board: Unilever_Experienced_Professionals
+      turkey_only: true
+
+  - slug: roche-tr
+    name: Roche
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://roche.wd3.myworkdayjobs.com/roche-ext
+    logo_url: https://www.google.com/s2/favicons?domain=roche.com&sz=128
+    full_sync: true
+    config:
+      host: roche.wd3.myworkdayjobs.com
+      tenant: roche
+      board: roche-ext
+      turkey_only: true
+
+  - slug: sanofi-tr
+    name: Sanofi
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://sanofi.wd3.myworkdayjobs.com/SanofiCareers
+    logo_url: https://www.google.com/s2/favicons?domain=sanofi.com&sz=128
+    full_sync: true
+    config:
+      host: sanofi.wd3.myworkdayjobs.com
+      tenant: sanofi
+      board: SanofiCareers
+      turkey_only: true
+
+  - slug: boeing-tr
+    name: Boeing
+    enabled: true
+    source_type: corporate
+    ats_type: workday
+    adapter: ats.workday
+    careers_url: https://boeing.wd1.myworkdayjobs.com/EXTERNAL_CAREERS
+    logo_url: https://www.google.com/s2/favicons?domain=boeing.com&sz=128
+    full_sync: true
+    config:
+      host: boeing.wd1.myworkdayjobs.com
+      tenant: boeing
+      board: EXTERNAL_CAREERS
+      turkey_only: true
+
   # ===========================================================================
   # 5) KURUMSAL ŞİRKETLER — ASHBY / WORKABLE ATS (Resmi JSON API, full_sync: true)
   # ===========================================================================
