@@ -153,6 +153,48 @@ def detect_work_mode(*texts: str | None) -> WorkMode:
     return "unknown"
 
 
+def detect_work_mode_from_description(description: str | None) -> WorkMode:
+    """
+    Açıklama metninden YALNIZCA açık ve net çalışma modeli kalıplarıyla çıkarım yapar
+    ('online', 'ofis' gibi yanlış eşleşme üreten genel kelimeleri asla kullanmaz).
+    """
+    if not description:
+        return "unknown"
+    folded = f" {fold_tr(description)} "
+    if any(k in folded for k in (" hibrit ", " hybrid ")):
+        return "hybrid"
+    if any(
+        k in folded
+        for k in (
+            " uzaktan calisma",
+            " evden calisma",
+            " full remote",
+            " fully remote",
+            " 100 remote",
+            " remote work",
+            " remote position",
+            " remote role",
+            " work from home",
+            " wfh ",
+            " home office",
+            " homeoffice",
+        )
+    ):
+        return "remote"
+    if any(
+        k in folded
+        for k in (
+            " ofisten calisma",
+            " is yerinde calisma",
+            " on site ",
+            " onsite ",
+            " ofis ortaminda calis",
+        )
+    ):
+        return "onsite"
+    return "unknown"
+
+
 def detect_employment_type(*texts: str | None) -> EmploymentType:
     """Yalnızca kaynakta açıkça belirtiliyorsa tür döner; asla varsayılan tahmin yapmaz."""
     combined = " ".join(fold_tr(t) for t in texts if t)

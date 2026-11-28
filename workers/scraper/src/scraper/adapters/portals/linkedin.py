@@ -18,6 +18,7 @@ from scraper.normalizer import (
     detect_category,
     detect_employment_type,
     detect_work_mode,
+    detect_work_mode_from_description,
     is_turkey_location,
     normalize_city,
     strip_html,
@@ -423,6 +424,8 @@ class LinkedInGuestAdapter(BaseAdapter):
                     job.employment_type = real_emp
             if desc:
                 job.description = desc
+                if job.work_mode == "unknown":
+                    job.work_mode = detect_work_mode_from_description(desc)
             enriched += 1
             if ext_id not in existing:
                 enriched_new += 1

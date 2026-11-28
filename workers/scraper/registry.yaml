@@ -515,6 +515,14 @@ sources:
         - label: tum-sektorler
           keywords: ""
           max_jobs: 250
+        - label: uzaktan
+          keywords: ""
+          f_WT: "2"
+          max_jobs: 40
+        - label: hibrit
+          keywords: ""
+          f_WT: "3"
+          max_jobs: 40
         - label: staj
           keywords: "staj"
           max_jobs: 120
