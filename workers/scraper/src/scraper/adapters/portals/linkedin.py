@@ -381,11 +381,9 @@ class LinkedInGuestAdapter(BaseAdapter):
                     if turkey_only and loc_str and not is_turkey_location(loc_str):
                         continue
 
-                    # Aynı ilan başka bir sorgudan (ör. uzaktan + staj) zaten geldiyse eksik alanları zenginleştir
+                    # Aynı ilan başka bir sorgudan (ör. genel + staj) zaten geldiyse eksik alanları zenginleştir
                     if external_id in collected_by_id:
                         prev = collected_by_id[external_id]
-                        if forced_work_mode and prev.work_mode == "unknown":
-                            prev.work_mode = forced_work_mode
                         if forced_emp_type == "internship":
                             prev.employment_type = "internship"
                         continue
@@ -396,8 +394,10 @@ class LinkedInGuestAdapter(BaseAdapter):
                     posted_at = _parse_relative_time(time_text, time_dt_attr)
                     city = normalize_city(loc_str)
 
-                    # Yalnızca LinkedIn'in resmi f_WT filtresinden gelen gerçek çalışma modelini kullan
-                    work_mode: WorkMode = forced_work_mode or "unknown"
+                    # LinkedIn guest API ne kart/detay HTML'inde ne de f_WT filtresinde gerçek
+                    # çalışma modeli döndürür (f_WT parametresi guest endpoint'te yok sayılır).
+                    # Yanlış/tahmini etiket basmamak için LinkedIn ilanlarında work_mode unknown bırakılır.
+                    work_mode: WorkMode = "unknown"
                     detected_emp = detect_employment_type(title)
                     if forced_emp_type == "internship" or detected_emp == "internship":
                         emp_type: EmploymentType = "internship"

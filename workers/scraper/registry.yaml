@@ -830,24 +830,15 @@ sources:
       delay_max_sec: 3.8
       max_429_retries: 2
       queries:
-        - label: uzaktan
+        - label: tum-sektorler
           keywords: ""
-          f_WT: "2"
-          max_jobs: 90
-        - label: hibrit
-          keywords: ""
-          f_WT: "3"
-          max_jobs: 90
-        - label: ofis
-          keywords: ""
-          f_WT: "1"
-          max_jobs: 100
+          max_jobs: 250
         - label: staj
           keywords: "staj"
-          max_jobs: 100
+          max_jobs: 120
         - label: intern
           keywords: "intern"
-          max_jobs: 80
+          max_jobs: 100
 
   - slug: youthall
     name: Youthall
