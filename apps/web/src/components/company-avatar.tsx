@@ -12,13 +12,13 @@ interface CompanyAvatarProps {
 export function CompanyAvatar({ name, logoUrl, size = "md" }: CompanyAvatarProps) {
   const [imgFailed, setImgFailed] = useState(false);
   const initial = (name.trim()[0] || "?").toLocaleUpperCase("tr");
-  const sizeClass = size === "sm" ? "h-9 w-9 text-xs" : "h-10 w-10 text-sm";
+  const sizeClass = size === "sm" ? "h-11 w-11 text-sm" : "h-14 w-14 text-base";
 
   if (logoUrl && !imgFailed) {
     return (
       <div
         className={cn(
-          "flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-zinc-200 bg-white p-1 dark:border-zinc-800",
+          "flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200/90 bg-white p-0.5 shadow-xs dark:border-slate-700",
           sizeClass
         )}
       >
@@ -39,7 +39,7 @@ export function CompanyAvatar({ name, logoUrl, size = "md" }: CompanyAvatarProps
     <div
       aria-hidden="true"
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-lg border border-zinc-200 bg-zinc-100 font-semibold text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300",
+        "flex shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200",
         sizeClass
       )}
     >

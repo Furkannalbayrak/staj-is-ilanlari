@@ -8,6 +8,8 @@ import {
   ChevronRight,
   Clock,
   Filter,
+  Globe,
+  Layers,
   Loader2,
   MapPin,
   Search,
@@ -36,6 +38,7 @@ import { cn, formatJobDateTr, formatRelativeTimeTr, hasSupabaseEnv } from "@/lib
 import { createClient } from "@/lib/supabase/client";
 import { JobDrawer } from "@/components/job-drawer";
 import { CompanyAvatar } from "@/components/company-avatar";
+import { CustomSelect } from "@/components/custom-select";
 
 const DEFAULT_FILTERS: JobFilters = {
   q: "",
@@ -60,6 +63,37 @@ interface JobBoardProps {
   userId: string | null;
   emptyReason?: "no_env" | "no_jobs";
 }
+
+const SOURCE_BADGE_STYLES: Record<SourcePlatform, string> = {
+  direct:
+    "border-blue-200/80 bg-blue-50 text-blue-700 dark:border-blue-800/70 dark:bg-blue-950/60 dark:text-blue-300",
+  linkedin:
+    "border-sky-200/80 bg-sky-50 text-sky-700 dark:border-sky-800/70 dark:bg-sky-950/60 dark:text-sky-300",
+  youthall:
+    "border-indigo-200/80 bg-indigo-50 text-indigo-700 dark:border-indigo-800/70 dark:bg-indigo-950/60 dark:text-indigo-300",
+  indeed:
+    "border-blue-200/70 bg-blue-50/70 text-blue-800 dark:border-blue-800/60 dark:bg-blue-950/50 dark:text-blue-300",
+  techcareer:
+    "border-emerald-200/80 bg-emerald-50 text-emerald-700 dark:border-emerald-800/70 dark:bg-emerald-950/60 dark:text-emerald-300",
+  secretcv:
+    "border-amber-200/80 bg-amber-50 text-amber-800 dark:border-amber-800/70 dark:bg-amber-950/50 dark:text-amber-300",
+  elemannet:
+    "border-teal-200/80 bg-teal-50 text-teal-700 dark:border-teal-800/70 dark:bg-teal-950/60 dark:text-teal-300",
+  kariyernet:
+    "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  toptalent:
+    "border-cyan-200/80 bg-cyan-50 text-cyan-800 dark:border-cyan-800/70 dark:bg-cyan-950/60 dark:text-cyan-300",
+};
+
+const WORK_MODE_CHIP_STYLES: Record<WorkMode, string> = {
+  remote:
+    "border-emerald-200/80 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/50 dark:text-emerald-300",
+  hybrid:
+    "border-amber-200/80 bg-amber-50 text-amber-800 dark:border-amber-800/60 dark:bg-amber-950/50 dark:text-amber-300",
+  onsite:
+    "border-slate-200 bg-slate-100/90 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  unknown: "",
+};
 
 function formatCardLocation(
   city: string | null,
@@ -352,17 +386,19 @@ export function JobBoard({
   }
 
   const filterPanel = (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-          <Filter className="h-3.5 w-3.5" />
+    <div className="space-y-2.5">
+      <div className="flex items-center justify-between border-b border-slate-100 pb-2 dark:border-slate-800">
+        <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+          <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-blue-300">
+            <Filter className="h-3 w-3" />
+          </span>
           Filtreler
         </span>
         {activeFilterCount > 0 && (
           <button
             type="button"
             onClick={clearFilters}
-            className="text-xs font-medium text-blue-700 hover:underline dark:text-blue-400"
+            className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 transition-colors hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60"
           >
             Temizle ({activeFilterCount})
           </button>
@@ -371,28 +407,43 @@ export function JobBoard({
 
       {/* Arama */}
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+        <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Anahtar Kelime
         </label>
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-zinc-400" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Pozisyon, şirket..."
-            className="h-9 w-full rounded-md border border-zinc-200 bg-white pl-8 pr-3 text-sm text-zinc-950 placeholder:text-zinc-400 focus:border-blue-600 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-blue-500"
+            className={cn(
+              "h-8.5 w-full rounded-lg border pl-8 pr-7 text-xs transition-all placeholder:text-slate-400 focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/15 dark:focus:border-blue-500 dark:focus:bg-slate-900",
+              searchInput.trim()
+                ? "border-blue-300 bg-blue-50/30 font-medium text-slate-900 dark:border-blue-700 dark:bg-blue-950/30 dark:text-slate-50"
+                : "border-slate-200 bg-slate-50/80 text-slate-900 hover:border-slate-300 dark:border-slate-700/80 dark:bg-slate-800/70 dark:text-slate-50"
+            )}
           />
+          {searchInput && (
+            <button
+              type="button"
+              aria-label="Aramayı temizle"
+              onClick={() => setSearchInput("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-400 hover:bg-slate-200/70 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Çalışma Tipi (Hızlı Pill'ler) */}
-      <div>
-        <label className="mb-1.5 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+      <div className="border-t border-slate-100 pt-2.5 dark:border-slate-800/80">
+        <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           İlan Türü
         </label>
         <div className="flex flex-wrap gap-1.5">
-          {(["all", "internship", "new_grad", "full_time", "part_time"] as const).map((type) => {
+          {(["all", "internship", "new_grad", "full_time", "part_time", "contract"] as const).map((type) => {
             const active = selectedEmployment === type;
             return (
               <button
@@ -403,10 +454,10 @@ export function JobBoard({
                   setSelectedEmployment(type);
                 }}
                 className={cn(
-                  "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                  "rounded-md border px-2 py-1 text-xs font-medium transition-all",
                   active
-                    ? "border-blue-700 bg-blue-700 text-white dark:border-blue-600 dark:bg-blue-600"
-                    : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    ? "border-blue-700 bg-blue-700 text-white shadow-xs dark:border-blue-600 dark:bg-blue-600"
+                    : "border-slate-200 bg-slate-50/70 text-slate-700 hover:border-blue-300 hover:bg-white hover:text-blue-700 dark:border-slate-700/80 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:border-blue-700 dark:hover:text-blue-300"
                 )}
               >
                 {type === "all" ? "Tümü" : EMPLOYMENT_TYPE_LABELS[type]}
@@ -417,57 +468,67 @@ export function JobBoard({
       </div>
 
       {/* Şehir */}
-      <div>
-        <label className="mb-1.5 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+      <div className="border-t border-slate-100 pt-2.5 dark:border-slate-800/80">
+        <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Şehir
         </label>
-        <select
+        <CustomSelect
           value={selectedCity}
-          onChange={(e) => {
+          onChange={(val) => {
             setCurrentPage(1);
-            setSelectedCity(e.target.value);
+            setSelectedCity(val);
           }}
-          className="h-9 w-full rounded-md border border-zinc-200 bg-white px-2.5 text-sm text-zinc-900 focus:border-blue-600 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
-        >
-          <option value="all">Tüm Şehirler</option>
-          {availableCities.map((city) => (
-            <option key={city} value={city}>
-              {city}
-            </option>
-          ))}
-        </select>
+          icon={<MapPin className="h-3.5 w-3.5" />}
+          searchable
+          searchPlaceholder="Şehir ara..."
+          isActive={selectedCity !== "all"}
+          options={[
+            { value: "all", label: "Tüm Şehirler" },
+            ...availableCities.map((city) => ({ value: city, label: city })),
+          ]}
+        />
       </div>
 
       {/* Kategori / Alan */}
       <div>
-        <label className="mb-1.5 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+        <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Alan / Kategori
         </label>
-        <select
+        <CustomSelect
           value={selectedCategory}
-          onChange={(e) => {
+          onChange={(val) => {
             setCurrentPage(1);
-            setSelectedCategory(e.target.value as JobCategory | "all");
+            setSelectedCategory(val as JobCategory | "all");
           }}
-          className="h-9 w-full rounded-md border border-zinc-200 bg-white px-2.5 text-sm text-zinc-900 focus:border-blue-600 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
-        >
-          <option value="all">Tüm Alanlar</option>
-          {(Object.entries(CATEGORY_LABELS) as [JobCategory, string][]).map(([key, label]) => (
-            <option key={key} value={key}>
-              {label}
-            </option>
-          ))}
-        </select>
+          icon={<Layers className="h-3.5 w-3.5" />}
+          searchable
+          searchPlaceholder="Alan ara..."
+          isActive={selectedCategory !== "all"}
+          options={[
+            { value: "all", label: "Tüm Alanlar" },
+            ...(Object.entries(CATEGORY_LABELS) as [JobCategory, string][]).map(
+              ([key, label]) => ({ value: key, label })
+            ),
+          ]}
+        />
       </div>
 
       {/* Çalışma Modeli */}
-      <div>
-        <label className="mb-1.5 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+      <div className="border-t border-slate-100 pt-2.5 dark:border-slate-800/80">
+        <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Çalışma Modeli
         </label>
         <div className="flex flex-wrap gap-1.5">
           {(["all", "remote", "hybrid", "onsite"] as const).map((mode) => {
             const active = selectedWorkMode === mode;
+            const activeStyle =
+              mode === "remote"
+                ? "border-emerald-600 bg-emerald-600 text-white shadow-xs"
+                : mode === "hybrid"
+                  ? "border-amber-600 bg-amber-600 text-white shadow-xs"
+                  : mode === "onsite"
+                    ? "border-slate-800 bg-slate-800 text-white shadow-xs dark:border-slate-200 dark:bg-slate-200 dark:text-slate-900"
+                    : "border-blue-700 bg-blue-700 text-white shadow-xs dark:border-blue-600 dark:bg-blue-600";
             return (
               <button
                 key={mode}
@@ -477,10 +538,10 @@ export function JobBoard({
                   setSelectedWorkMode(mode);
                 }}
                 className={cn(
-                  "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                  "rounded-md border px-2 py-1 text-xs font-medium transition-all",
                   active
-                    ? "border-blue-700 bg-blue-700 text-white dark:border-blue-600 dark:bg-blue-600"
-                    : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    ? activeStyle
+                    : "border-slate-200 bg-slate-50/70 text-slate-700 hover:border-blue-300 hover:bg-white hover:text-blue-700 dark:border-slate-700/80 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:border-blue-700 dark:hover:text-blue-300"
                 )}
               >
                 {mode === "all" ? "Tümü" : WORK_MODE_LABELS[mode]}
@@ -491,37 +552,40 @@ export function JobBoard({
       </div>
 
       {/* Kaynak */}
-      <div>
-        <label className="mb-1.5 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+      <div className="border-t border-slate-100 pt-2.5 dark:border-slate-800/80">
+        <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Kaynak
         </label>
-        <select
+        <CustomSelect
           value={selectedSource}
-          onChange={(e) => {
+          onChange={(val) => {
             setCurrentPage(1);
-            setSelectedSource(e.target.value as SourcePlatform | "all");
+            setSelectedSource(val as SourcePlatform | "all");
           }}
-          className="h-9 w-full rounded-md border border-zinc-200 bg-white px-2.5 text-sm text-zinc-900 focus:border-blue-600 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100"
-        >
-          <option value="all">Tüm Kaynaklar</option>
-          {(Object.entries(SOURCE_PLATFORM_LABELS) as [SourcePlatform, string][]).map(
-            ([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            )
-          )}
-        </select>
+          icon={<Globe className="h-3.5 w-3.5" />}
+          isActive={selectedSource !== "all"}
+          dropUp
+          options={[
+            { value: "all", label: "Tüm Kaynaklar" },
+            { value: "direct", label: "Resmi Kariyer", dotClass: "bg-blue-600" },
+            { value: "linkedin", label: "LinkedIn", dotClass: "bg-sky-500" },
+            { value: "indeed", label: "Indeed", dotClass: "bg-blue-800" },
+            { value: "youthall", label: "Youthall", dotClass: "bg-indigo-500" },
+            { value: "techcareer", label: "Techcareer.net", dotClass: "bg-emerald-500" },
+            { value: "secretcv", label: "Secretcv", dotClass: "bg-amber-500" },
+            { value: "elemannet", label: "Eleman.net", dotClass: "bg-teal-500" },
+          ]}
+        />
       </div>
     </div>
   );
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_minmax(0,1fr)]">
+    <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[264px_minmax(0,1fr)]">
         {/* Desktop Sol Filtre Paneli */}
         <aside className="hidden lg:block">
-          <div className="sticky top-20 rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-800/80 dark:bg-zinc-900/30">
+          <div className="sticky top-[4.5rem] rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] dark:border-slate-800 dark:bg-slate-900">
             {filterPanel}
           </div>
         </aside>
@@ -529,28 +593,28 @@ export function JobBoard({
         {/* Sağ Tek Sütun İlan Akışı */}
         <section className="min-w-0">
           {/* Üst Bilgi Çubuğu: Son Güncelleme + Toplam Sayı + Mobil Filtre */}
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 pb-3 dark:border-zinc-800">
-            <div className="flex items-center gap-3">
-              <h1 className="text-base font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/90 bg-white px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900">
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-base font-bold tracking-tight text-slate-900 dark:text-slate-50">
                 Aktif İlanlar
               </h1>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                {isLoading && <Loader2 className="h-3 w-3 animate-spin text-blue-600" />}
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-700 px-2.5 py-0.5 text-xs font-semibold text-white shadow-xs dark:bg-blue-600">
+                {isLoading && <Loader2 className="h-3 w-3 animate-spin text-white" />}
                 {totalCount.toLocaleString("tr-TR")}
               </span>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="inline-flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-600 dark:bg-blue-500" />
-                <Clock className="h-3.5 w-3.5" />
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <Clock className="h-3.5 w-3.5 text-slate-400" />
                 <span>Son güncelleme: {formatRelativeTimeTr(lastUpdatedAt)}</span>
               </div>
 
               <button
                 type="button"
                 onClick={() => setMobileFiltersOpen((v) => !v)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-zinc-200 px-2.5 text-xs font-medium text-zinc-700 lg:hidden dark:border-zinc-800 dark:text-zinc-300"
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 lg:hidden dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Filtrele
@@ -561,12 +625,12 @@ export function JobBoard({
 
           {/* Mobil Filtre Paneli */}
           {mobileFiltersOpen && (
-            <div className="mb-5 rounded-xl border border-zinc-200 bg-zinc-50 p-4 lg:hidden dark:border-zinc-800 dark:bg-zinc-900/50">
+            <div className="mb-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:hidden dark:border-slate-800 dark:bg-slate-900">
               <div className="mb-2 flex justify-end">
                 <button
                   type="button"
                   onClick={() => setMobileFiltersOpen(false)}
-                  className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
+                  className="text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -637,22 +701,27 @@ export function JobBoard({
             <>
               <div
                 className={cn(
-                  "divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200 bg-white transition-opacity dark:divide-zinc-800/80 dark:border-zinc-800 dark:bg-zinc-950",
+                  "space-y-2.5 transition-opacity",
                   isLoading && "opacity-60"
                 )}
               >
                 {jobs.map((job) => {
                   const isSaved = savedIds.has(job.id);
                   const isSelected = selectedJob?.id === job.id;
+                  const locLabel = formatCardLocation(
+                    job.city,
+                    job.location,
+                    job.source_platform
+                  );
                   return (
                     <article
                       key={job.id}
                       onClick={() => setSelectedJob(job)}
                       className={cn(
-                        "group flex cursor-pointer items-center justify-between gap-4 px-5 py-4 transition-colors",
+                        "group flex cursor-pointer items-center justify-between gap-4 rounded-xl border bg-white px-5 py-4 transition-all dark:bg-slate-900",
                         isSelected
-                          ? "bg-blue-50/60 dark:bg-blue-950/20"
-                          : "hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+                          ? "border-blue-600 bg-blue-50/40 ring-1 ring-blue-600/20 shadow-sm dark:border-blue-500 dark:bg-blue-950/30"
+                          : "border-slate-200/90 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-blue-300 hover:shadow-[0_4px_14px_rgba(29,78,216,0.08)] dark:border-slate-800 dark:hover:border-blue-700/70"
                       )}
                     >
                       <div className="flex min-w-0 flex-1 items-start gap-3.5">
@@ -662,80 +731,73 @@ export function JobBoard({
                           size="md"
                         />
 
-                        <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="min-w-0 flex-1 space-y-2">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                              <Building2 className="h-3.5 w-3.5 text-zinc-400" />
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                              <Building2 className="h-3.5 w-3.5 text-slate-400" />
                               {job.company_name}
                             </span>
                             <span
                               className={cn(
-                                "rounded px-1.5 py-0.5 text-[11px] font-medium",
-                                job.source_platform === "direct"
-                                  ? "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
-                                  : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+                                "rounded-md border px-1.5 py-0.5 text-[11px] font-medium",
+                                SOURCE_BADGE_STYLES[job.source_platform]
                               )}
                             >
                               {SOURCE_PLATFORM_LABELS[job.source_platform]}
                             </span>
                             {job.employment_type === "internship" && (
-                              <span className="rounded bg-blue-700/10 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
+                              <span className="rounded-md bg-blue-700 px-2 py-0.5 text-[11px] font-semibold text-white dark:bg-blue-600">
                                 Staj
                               </span>
                             )}
                           </div>
 
-                          <h2 className="truncate text-[15px] font-semibold text-zinc-950 group-hover:text-blue-700 dark:text-zinc-50 dark:group-hover:text-blue-400">
+                          <h2 className="truncate text-[15px] font-semibold text-slate-900 transition-colors group-hover:text-blue-700 dark:text-slate-50 dark:group-hover:text-blue-400">
                             {job.title}
                           </h2>
 
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
-                            {(() => {
-                              const locLabel = formatCardLocation(
-                                job.city,
-                                job.location,
-                                job.source_platform
-                              );
-                              const items: React.ReactNode[] = [];
-                              if (locLabel) {
-                                items.push(
-                                  <span key="loc" className="inline-flex items-center gap-1">
-                                    <MapPin className="h-3 w-3" />
-                                    {locLabel}
-                                  </span>
-                                );
-                              }
-                              if (job.employment_type !== "unknown") {
-                                items.push(
-                                  <span key="emp">
-                                    {EMPLOYMENT_TYPE_LABELS[job.employment_type]}
-                                  </span>
-                                );
-                              }
-                              if (
-                                job.work_schedule &&
-                                job.work_schedule !==
-                                  EMPLOYMENT_TYPE_LABELS[job.employment_type]
-                              ) {
-                                items.push(<span key="sched">{job.work_schedule}</span>);
-                              }
-                              if (job.work_mode !== "unknown") {
-                                items.push(
-                                  <span key="wm">{WORK_MODE_LABELS[job.work_mode]}</span>
-                                );
-                              }
-                              if (job.category !== "other") {
-                                items.push(
-                                  <span key="cat">{CATEGORY_LABELS[job.category]}</span>
-                                );
-                              }
-                              return items.map((item, idx) => (
-                                <span key={idx} className="inline-flex items-center gap-3">
-                                  {idx > 0 && <span>·</span>}
-                                  {item}
+                          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                            {locLabel && (
+                              <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                <MapPin className="h-3 w-3 text-slate-500 dark:text-slate-400" />
+                                {locLabel}
+                              </span>
+                            )}
+                            {job.employment_type !== "unknown" &&
+                              job.employment_type !== "internship" && (
+                                <span
+                                  className={cn(
+                                    "rounded-md border px-2 py-0.5 font-medium",
+                                    job.employment_type === "new_grad"
+                                      ? "border-cyan-200/80 bg-cyan-50 text-cyan-800 dark:border-cyan-800/60 dark:bg-cyan-950/50 dark:text-cyan-300"
+                                      : "border-slate-200/80 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300"
+                                  )}
+                                >
+                                  {EMPLOYMENT_TYPE_LABELS[job.employment_type]}
                                 </span>
-                              ));
-                            })()}
+                              )}
+                            {job.work_schedule &&
+                              job.work_schedule !==
+                                EMPLOYMENT_TYPE_LABELS[job.employment_type] && (
+                                <span className="rounded-md border border-slate-200/80 bg-slate-50 px-2 py-0.5 font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300">
+                                  {job.work_schedule}
+                                </span>
+                              )}
+                            {job.work_mode !== "unknown" && (
+                              <span
+                                className={cn(
+                                  "rounded-md border px-2 py-0.5 font-medium",
+                                  WORK_MODE_CHIP_STYLES[job.work_mode]
+                                )}
+                              >
+                                {WORK_MODE_LABELS[job.work_mode]}
+                              </span>
+                            )}
+                            {job.category !== "other" && (
+                              <span className="px-1.5 py-0.5 text-slate-500 dark:text-slate-400">
+                                {CATEGORY_LABELS[job.category]}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -747,7 +809,7 @@ export function JobBoard({
                               ? "İlan yayın tarihi"
                               : "Sisteme ilk eklenme zamanı"
                           }
-                          className="hidden text-xs text-zinc-400 sm:inline"
+                          className="hidden text-xs font-medium text-slate-500 sm:inline dark:text-slate-400"
                         >
                           {formatJobDateTr(job.posted_at, job.first_seen_at).label}
                         </span>
@@ -759,10 +821,10 @@ export function JobBoard({
                             handleToggleSave(job.id);
                           }}
                           className={cn(
-                            "flex h-8 w-8 items-center justify-center rounded-md border transition-colors",
+                            "flex h-8 w-8 items-center justify-center rounded-lg border transition-colors",
                             isSaved
-                              ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300"
-                              : "border-zinc-200 text-zinc-400 hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-800 dark:hover:border-zinc-700 dark:hover:text-zinc-200"
+                              ? "border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-300"
+                              : "border-slate-200 bg-slate-50 text-slate-400 hover:border-blue-300 hover:bg-blue-50/50 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-700 dark:hover:text-blue-300"
                           )}
                         >
                           <Bookmark className={cn("h-4 w-4", isSaved && "fill-current")} />
@@ -776,18 +838,18 @@ export function JobBoard({
               {/* Sunucu Taraflı Sayfalama (50 ilan / sayfa) */}
               {totalPages > 1 && (
                 <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
                     {(pageStart + 1).toLocaleString("tr-TR")}–
                     {Math.min(pageStart + PAGE_SIZE, totalCount).toLocaleString("tr-TR")} /{" "}
                     {totalCount.toLocaleString("tr-TR")} ilan
                   </p>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       disabled={safePage <= 1 || isLoading}
                       onClick={() => goToPage(safePage - 1)}
-                      className="inline-flex h-8 items-center gap-1 rounded-md border border-zinc-200 px-2.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100 disabled:pointer-events-none disabled:opacity-40 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                      className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs transition-colors hover:border-blue-300 hover:text-blue-700 disabled:pointer-events-none disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-700"
                     >
                       <ChevronLeft className="h-3.5 w-3.5" />
                       Önceki
@@ -806,17 +868,17 @@ export function JobBoard({
                         return (
                           <span key={p} className="inline-flex items-center gap-1">
                             {showDots && (
-                              <span className="px-1 text-xs text-zinc-400">…</span>
+                              <span className="px-1 text-xs text-slate-400">…</span>
                             )}
                             <button
                               type="button"
                               disabled={isLoading}
                               onClick={() => goToPage(p)}
                               className={cn(
-                                "inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2 text-xs font-medium transition-colors disabled:opacity-60",
+                                "inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-2 text-xs font-semibold shadow-xs transition-colors disabled:opacity-60",
                                 p === safePage
                                   ? "border-blue-700 bg-blue-700 text-white dark:border-blue-600 dark:bg-blue-600"
-                                  : "border-zinc-200 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                                  : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-700"
                               )}
                             >
                               {p}
@@ -829,7 +891,7 @@ export function JobBoard({
                       type="button"
                       disabled={safePage >= totalPages || isLoading}
                       onClick={() => goToPage(safePage + 1)}
-                      className="inline-flex h-8 items-center gap-1 rounded-md border border-zinc-200 px-2.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100 disabled:pointer-events-none disabled:opacity-40 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-900"
+                      className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-medium text-slate-700 shadow-xs transition-colors hover:border-blue-300 hover:text-blue-700 disabled:pointer-events-none disabled:opacity-40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-700"
                     >
                       Sonraki
                       <ChevronRight className="h-3.5 w-3.5" />

@@ -68,14 +68,14 @@ export function StickyHeader({ initialUser }: StickyHeaderProps) {
   ];
 
   return (
-    <header className="sticky top-0 z-40 h-14 border-b border-zinc-200/80 bg-white/85 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/85">
+    <header className="sticky top-0 z-40 h-14 border-b border-slate-200/90 bg-white/95 shadow-[0_1px_2px_rgba(15,23,42,0.04)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-6">
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm font-semibold tracking-tight text-zinc-950 dark:text-zinc-50"
+            className="flex items-center gap-2.5 text-sm font-bold tracking-tight text-slate-900 dark:text-slate-50"
           >
-            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-700 text-xs font-bold text-white dark:bg-blue-600">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-700 text-xs font-bold text-white shadow-xs dark:bg-blue-600">
               K
             </span>
             <span>KariyerRadar TR</span>
@@ -89,10 +89,10 @@ export function StickyHeader({ initialUser }: StickyHeaderProps) {
                   key={href}
                   href={href}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors",
+                    "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
                     active
-                      ? "bg-zinc-100 text-zinc-950 dark:bg-zinc-800/80 dark:text-zinc-50"
-                      : "text-zinc-600 hover:bg-zinc-100/70 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
+                      ? "bg-blue-50 text-blue-700 font-semibold dark:bg-blue-950/70 dark:text-blue-300"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                   )}
                 >
                   <Icon className="h-3.5 w-3.5" />
@@ -108,7 +108,7 @@ export function StickyHeader({ initialUser }: StickyHeaderProps) {
             type="button"
             onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
             aria-label="Tema değiştir"
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-zinc-200 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-950 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-50"
           >
             {mounted ? (
               resolvedTheme === "dark" ? (
